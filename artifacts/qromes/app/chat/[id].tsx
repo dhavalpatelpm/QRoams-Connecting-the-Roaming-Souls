@@ -165,24 +165,27 @@ export default function ChatScreen() {
         />
 
         {/* Quick replies */}
-        <FlatList
-          data={QUICK_REPLIES}
-          keyExtractor={(q) => q}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 12, gap: 8, paddingVertical: 8 }}
-          renderItem={({ item: q }) => (
-            <TouchableOpacity
-              style={[styles.quickReply, { backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6" }]}
-              onPress={() => {
-                setText(q);
-                inputRef.current?.focus();
-              }}
-            >
-              <Text style={[styles.quickReplyText, { color: colors.text }]}>{q}</Text>
-            </TouchableOpacity>
-          )}
-        />
+        <View style={styles.quickRepliesRow}>
+          <FlatList
+            data={QUICK_REPLIES}
+            keyExtractor={(q) => q}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 12, gap: 8, alignItems: "center" }}
+            style={{ flexGrow: 0 }}
+            renderItem={({ item: q }) => (
+              <TouchableOpacity
+                style={[styles.quickReply, { backgroundColor: isDark ? colors.backgroundSecondary : "#F0EEFF" }]}
+                onPress={() => {
+                  setText(q);
+                  inputRef.current?.focus();
+                }}
+              >
+                <Text style={[styles.quickReplyText, { color: isDark ? colors.text : QColors.primary }]}>{q}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
 
         {/* Input */}
         <View
@@ -343,14 +346,22 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     alignSelf: "flex-end",
   },
+  quickRepliesRow: {
+    height: 48,
+    justifyContent: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.06)",
+  },
   quickReply: {
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: QColors.primary + "35",
   },
   quickReplyText: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Inter_500Medium",
   },
   inputContainer: {
     flexDirection: "row",

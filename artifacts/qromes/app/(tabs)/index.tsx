@@ -208,12 +208,12 @@ export default function DiscoverScreen() {
             <Ionicons name="arrow-undo" size={22} color={QColors.gold} />
           </TouchableOpacity>
 
-          {/* Pass / Audio call (swipe left = audio) */}
+          {/* Audio call */}
           <TouchableOpacity
             style={[styles.actionRingLg, { borderColor: "#EF4444" }]}
             onPress={() => handleAudioCall(currentProfile)}
           >
-            <Ionicons name="close" size={32} color="#EF4444" />
+            <Ionicons name="call" size={26} color="#EF4444" />
           </TouchableOpacity>
 
           {/* Star / Super like */}
@@ -227,12 +227,12 @@ export default function DiscoverScreen() {
             <Ionicons name="star" size={22} color="#3B82F6" />
           </TouchableOpacity>
 
-          {/* Heart / Video call (swipe right = video) */}
+          {/* Video call */}
           <TouchableOpacity
             style={[styles.actionRingLg, { borderColor: "#10B981" }]}
             onPress={() => handleVideoCall(currentProfile)}
           >
-            <Ionicons name="heart" size={30} color="#10B981" />
+            <Ionicons name="videocam" size={26} color="#10B981" />
           </TouchableOpacity>
 
           {/* Boost / Chat */}
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 6,
+    paddingBottom: 10,
   },
   headerLeft: {
     flexDirection: "row",
