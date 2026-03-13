@@ -80,41 +80,24 @@ export default function DiscoverScreen() {
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.locationPill}
-            onPress={() => router.push("/(tabs)/profile")}
-          >
-            <Ionicons
-              name="location"
-              size={11}
-              color={isDark ? "#A78BFA" : QColors.primary}
-            />
-            <Text
-              style={[styles.locationPillText, { color: isDark ? "#A78BFA" : QColors.primary }]}
-              numberOfLines={1}
+          {/* Top row: coins + avatar */}
+          <View style={styles.headerRightRow}>
+            <TouchableOpacity style={styles.coinBadge}>
+              <LinearGradient
+                colors={[QColors.gold, "#F97316"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Ionicons name="flash" size={12} color="#fff" />
+              <Text style={styles.coinText}>{user?.coinBalance ?? 100}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.profileAvatar}
+              onPress={() => router.push("/(tabs)/profile")}
+              activeOpacity={0.8}
             >
-              {(user?.city || user?.country)
-                ? [user.city, user.country].filter(Boolean).join(", ")
-                : "Set location"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.coinBadge}>
-            <LinearGradient
-              colors={[QColors.gold, "#F97316"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Ionicons name="flash" size={12} color="#fff" />
-            <Text style={styles.coinText}>{user?.coinBalance ?? 100}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.profileAvatar}
-            onPress={() => router.push("/(tabs)/profile")}
-            activeOpacity={0.8}
-          >
             {user?.photos?.[0] ? (
               <Image
                 source={{ uri: user.photos[0] }}
@@ -138,6 +121,23 @@ export default function DiscoverScreen() {
                 )}
               </>
             )}
+          </TouchableOpacity>
+          </View>
+
+          {/* Location — below coins + avatar */}
+          <TouchableOpacity
+            style={styles.locationPill}
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <Ionicons name="location" size={10} color={isDark ? "#A78BFA" : QColors.primary} />
+            <Text
+              style={[styles.locationPillText, { color: isDark ? "#A78BFA" : QColors.primary }]}
+              numberOfLines={1}
+            >
+              {(user?.city || user?.country)
+                ? [user.city, user.country].filter(Boolean).join(", ")
+                : "Set location"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 10,
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    marginTop: 4,
   },
   headerTitle: {
     fontSize: 20,
@@ -286,6 +287,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   headerRight: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  headerRightRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -293,13 +299,11 @@ const styles = StyleSheet.create({
   locationPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    maxWidth: 110,
+    gap: 3,
   },
   locationPillText: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
-    flexShrink: 1,
   },
   coinBadge: {
     flexDirection: "row",
