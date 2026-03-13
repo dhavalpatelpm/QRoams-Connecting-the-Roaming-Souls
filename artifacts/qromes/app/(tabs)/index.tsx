@@ -69,7 +69,7 @@ export default function DiscoverScreen() {
 
   const isEmpty = currentIndex >= profiles.length;
 
-  const topPadding = Platform.OS === "web" ? 67 : insets.top;
+  const topPadding = insets.top;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -215,7 +215,7 @@ export default function DiscoverScreen() {
 
       {/* Action buttons */}
       {!isEmpty && (
-        <View style={[styles.actions, { paddingBottom: Platform.OS === "web" ? 78 : insets.bottom + 100 }]}>
+        <View style={[styles.actions, { paddingBottom: insets.bottom + 90 }]}>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: QColors.primary + "15" }]}
             onPress={() => handleAudioCall(currentProfile)}

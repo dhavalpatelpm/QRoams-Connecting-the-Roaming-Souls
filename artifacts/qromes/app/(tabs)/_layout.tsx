@@ -1,119 +1,110 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import React from "react";
-import {
-  Platform,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QColors } from "@/constants/colors";
 import { useThemeContext } from "@/context/ThemeContext";
 
+function TabIcon({ name, focused }: { name: any; focused: boolean }) {
+  return (
+    <Ionicons
+      name={name}
+      size={24}
+      color={focused ? QColors.primary : "#9CA3AF"}
+    />
+  );
+}
+
 export default function TabLayout() {
   const { isDark } = useThemeContext();
-  const safeAreaInsets = useSafeAreaInsets();
-  const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
+  const insets = useSafeAreaInsets();
+
+  const tabBarBg = isDark ? "#0A0A0F" : "#FFFFFF";
+  const borderColor = isDark ? "#2D2D3D" : "#E5E7EB";
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: QColors.primary,
-        tabBarInactiveTintColor: isDark ? "#6B7280" : "#9CA3AF",
+        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontFamily: "Inter_500Medium",
+          marginBottom: Platform.OS === "ios" ? 0 : 4,
+        },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : isDark ? "#0A0A0F" : "#fff",
-          borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: isDark ? "#2D2D3D" : "#E5E7EB",
+          backgroundColor: Platform.OS === "ios" ? "transparent" : tabBarBg,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: borderColor,
           elevation: 0,
-          paddingBottom: safeAreaInsets.bottom,
-          ...(isWeb ? { height: 60 } : {}),
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
         },
         tabBarBackground: () =>
-          isIOS ? (
+          Platform.OS === "ios" ? (
             <BlurView
-              intensity={100}
+              intensity={90}
               tint={isDark ? "dark" : "extraLight"}
               style={StyleSheet.absoluteFill}
             />
-          ) : (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: isDark ? "#0A0A0F" : "#fff" },
-              ]}
-            />
-          ),
+          ) : undefined,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Discover",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="flame.fill" tintColor={color} size={24} />
-            ) : (
-              <Ionicons name="flame" size={22} color={color} />
-            ),
+          title: "Home",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? "home" : "home-outline"} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="session"
         options={{
-          title: "Explore",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={24} />
-            ) : (
-              <Ionicons name="search" size={22} color={color} />
-            ),
+          title: "Sessions",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? "clipboard" : "clipboard-outline"} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="spark"
+        name="meet"
         options={{
-          title: "Spark",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bolt.fill" tintColor={color} size={24} />
-            ) : (
-              <Ionicons name="flash" size={22} color={color} />
-            ),
+          title: "Meet",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? "people" : "people-outline"} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="coins"
         options={{
-          title: "Messages",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView
-                name="bubble.left.and.bubble.right.fill"
-                tintColor={color}
-                size={24}
-              />
-            ) : (
-              <Ionicons name="chatbubbles" size={22} color={color} />
-            ),
+          title: "Coins",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? "disc" : "disc-outline"}
+              focused={focused}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="qai"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.fill" tintColor={color} size={24} />
-            ) : (
-              <Ionicons name="person" size={22} color={color} />
-            ),
+          title: "Q-AI",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? "hardware-chip" : "hardware-chip-outline"} focused={focused} />
+          ),
         }}
       />
+
+      {/* Hidden screens — routable but no tab entry */}
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

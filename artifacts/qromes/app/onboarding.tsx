@@ -382,6 +382,7 @@ export default function OnboardingScreen() {
   // Step 2
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   const otpRefs = useRef<(TextInput | null)[]>([]);
 
   const animateToStep = (newStep: number) => {
@@ -854,7 +855,11 @@ export default function OnboardingScreen() {
 
                   <TouchableOpacity
                     style={styles.primaryBtn}
-                    onPress={() => setOtpSent(true)}
+                    onPress={() => {
+                      const code = Math.floor(100000 + Math.random() * 900000).toString();
+                      setOtpCode(code);
+                      setOtpSent(true);
+                    }}
                   >
                     <LinearGradient
                       colors={[QColors.primary, QColors.accent]}
@@ -867,7 +872,22 @@ export default function OnboardingScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View style={{ gap: 24 }}>
+                <View style={{ gap: 20 }}>
+                  {/* OTP Code Display — shown on screen for development */}
+                  <View style={styles.otpDisplayCard}>
+                    <LinearGradient
+                      colors={["#F5F3FF", "#FCE7F3"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.otpDisplayGradient}
+                    >
+                      <Ionicons name="mail-outline" size={18} color={QColors.primary} />
+                      <Text style={styles.otpDisplayLabel}>Your OTP code</Text>
+                      <Text style={styles.otpDisplayCode}>{otpCode}</Text>
+                      <Text style={styles.otpDisplayHint}>Valid for 10 minutes · Do not share</Text>
+                    </LinearGradient>
+                  </View>
+
                   <View>
                     <Text style={styles.otpEntryLabel}>Enter the 6-digit code</Text>
                     <View style={styles.otpRow}>
@@ -1297,6 +1317,35 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
     paddingHorizontal: 16,
+  },
+  otpDisplayCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  otpDisplayGradient: {
+    padding: 20,
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: "#DDD6FE",
+    borderRadius: 16,
+  },
+  otpDisplayLabel: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: "#6B7280",
+  },
+  otpDisplayCode: {
+    fontSize: 40,
+    fontFamily: "Inter_700Bold",
+    color: QColors.primary,
+    letterSpacing: 6,
+    marginVertical: 4,
+  },
+  otpDisplayHint: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: "#9CA3AF",
   },
   otpEntryLabel: {
     fontSize: 14,
