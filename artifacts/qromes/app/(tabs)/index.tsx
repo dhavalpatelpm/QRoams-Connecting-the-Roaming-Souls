@@ -4,7 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Dimensions,
   Platform,
   StyleSheet,
@@ -18,6 +17,7 @@ import { ProfileCard } from "@/components/ProfileCard";
 import { ProfileDetailModal } from "@/components/ProfileDetailModal";
 import { QRomesLogo } from "@/components/QRomesLogo";
 import { useDiscover, ProfileCard as ProfileCardType } from "@/context/DiscoverContext";
+import { useChat } from "@/context/ChatContext";
 import { useTheme } from "@/constants/theme";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
@@ -26,6 +26,7 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { profiles, currentIndex, swipeLeft, swipeRight, nextProfile, resetFeed } = useDiscover();
+  const { createOrGetConversation } = useChat();
   const [selectedProfile, setSelectedProfile] = useState<ProfileCardType | null>(null);
 
   const currentProfile = profiles[currentIndex];
@@ -35,35 +36,32 @@ export default function DiscoverScreen() {
     const p = profile || currentProfile;
     if (!p) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert(
-      "Audio Call",
-      `Starting audio call with ${p.firstName}...`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Call", onPress: () => router.push({ pathname: "/call", params: { type: "audio", userId: p.id, name: p.firstName } }) },
-      ]
-    );
+    swipeLeft(p.id);
+    router.push({ pathname: "/call", params: { type: "audio", userId: p.id, name: p.firstName } });
   };
 
   const handleVideoCall = (profile?: ProfileCardType) => {
     const p = profile || currentProfile;
     if (!p) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert(
-      "Video Call",
-      `Starting video call with ${p.firstName}...`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Call", onPress: () => router.push({ pathname: "/call", params: { type: "video", userId: p.id, name: p.firstName } }) },
-      ]
-    );
+    swipeRight(p.id);
+    router.push({ pathname: "/call", params: { type: "video", userId: p.id, name: p.firstName } });
   };
 
   const handleChat = (profile?: ProfileCardType) => {
     const p = profile || currentProfile;
     if (!p) return;
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedProfile(null);
-    router.push({ pathname: "/chat/[id]", params: { id: "conv1" } });
+    const convId = createOrGetConversation({
+      id: p.id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      age: p.age,
+      isOnline: p.isOnline,
+    });
+    nextProfile();
+    router.push({ pathname: "/chat/[id]", params: { id: convId } });
   };
 
   const isEmpty = currentIndex >= profiles.length;
@@ -177,7 +175,7 @@ export default function DiscoverScreen() {
         <View style={[styles.actions, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 90 }]}>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: QColors.primary + "15" }]}
-            onPress={() => { swipeLeft(currentProfile.id); handleAudioCall(); }}
+            onPress={() => handleAudioCall(currentProfile)}
           >
             <Ionicons name="call" size={22} color={QColors.primary} />
           </TouchableOpacity>
@@ -189,7 +187,7 @@ export default function DiscoverScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.sparkBtn}
-            onPress={() => { swipeRight(currentProfile.id); handleVideoCall(); }}
+            onPress={() => handleVideoCall(currentProfile)}
           >
             <LinearGradient
               colors={[QColors.primary, QColors.accent]}
@@ -201,7 +199,7 @@ export default function DiscoverScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: QColors.accent + "15" }]}
-            onPress={() => handleChat()}
+            onPress={() => handleChat(currentProfile)}
           >
             <Ionicons name="chatbubble" size={22} color={QColors.accent} />
           </TouchableOpacity>
@@ -209,7 +207,7 @@ export default function DiscoverScreen() {
             style={[styles.actionBtn, { backgroundColor: QColors.gold + "15" }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              swipeRight(currentProfile.id);
+              nextProfile();
             }}
           >
             <Ionicons name="star" size={22} color={QColors.gold} />

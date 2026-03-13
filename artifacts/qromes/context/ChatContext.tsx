@@ -27,6 +27,13 @@ type ChatContextValue = {
   addMessage: (convId: string, text: string, senderId: string) => void;
   markRead: (convId: string) => void;
   getConversation: (id: string) => Conversation | undefined;
+  createOrGetConversation: (profile: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    age: number;
+    isOnline: boolean;
+  }) => string;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -186,9 +193,39 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const getConversation = (id: string) =>
     conversations.find((c) => c.id === id);
 
+  const createOrGetConversation = (profile: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    age: number;
+    isOnline: boolean;
+  }): string => {
+    const existing = conversations.find((c) => c.participantId === profile.id);
+    if (existing) return existing.id;
+
+    const newId = "conv_" + profile.id + "_" + Date.now();
+    const newConv: Conversation = {
+      id: newId,
+      participantId: profile.id,
+      participantName: profile.firstName + (profile.lastName ? " " + profile.lastName[0] + "." : ""),
+      participantAge: profile.age,
+      lastMessage: "Say hi! 👋",
+      lastMessageTime: Date.now(),
+      unreadCount: 0,
+      isOnline: profile.isOnline,
+      messages: [],
+    };
+    setConversations((prev) => {
+      const updated = [newConv, ...prev];
+      AsyncStorage.setItem("@qromes_conversations", JSON.stringify(updated));
+      return updated;
+    });
+    return newId;
+  };
+
   return (
     <ChatContext.Provider
-      value={{ conversations, addMessage, markRead, getConversation }}
+      value={{ conversations, addMessage, markRead, getConversation, createOrGetConversation }}
     >
       {children}
     </ChatContext.Provider>
