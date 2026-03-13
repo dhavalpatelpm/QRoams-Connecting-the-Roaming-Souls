@@ -1,0 +1,39 @@
+~/workspace$ git init
+Reinitialized existing Git repository in /home/runner/workspace/.git/
+~/workspace$ git remote add github https://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@github.com/dhavalpatelpm/QRoams-Connecting-the-Roaming-Souls.git
+error: remote github already exists.
+~/workspace$ git remote set-url github https://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@github.com/dhavalpatelpm/QRoams-Connecting-the-Roaming-Souls.git
+~/workspace$ git push github main
+Enumerating objects: 480, done.
+Counting objects: 100% (480/480), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (461/461), done.
+Writing objects: 100% (480/480), 37.87 MiB | 5.52 MiB/s, done.
+Total 480 (delta 234), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (234/234), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Groq API Key ——————————————————————————————————————
+remote:        locations:
+remote:          - commit: 2dce2c042b5727cc0283960e077697ecc106bc3e
+remote:            path: .replit:31
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/dhavalpatelpm/QRoams-Connecting-the-Roaming-Souls/security/secret-scanning/unblock-secret/3AtYe6MxWpZC2woOyDT29JweXEQ
+remote:     
+remote: 
+remote: 
+To https://github.com/dhavalpatelpm/QRoams-Connecting-the-Roaming-Souls.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/dhavalpatelpm/QRoams-Connecting-the-Roaming-Souls.git'
