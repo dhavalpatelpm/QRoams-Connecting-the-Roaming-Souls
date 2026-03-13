@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -19,24 +21,338 @@ import { QColors } from "@/constants/colors";
 import { QRomesLogo } from "@/components/QRomesLogo";
 import { useAuth } from "@/context/AuthContext";
 
+// ─── Country Data ────────────────────────────────────────────────────────────
+type Country = { name: string; code: string; dial: string; flag: string };
+
+const COUNTRIES: Country[] = [
+  { name: "Afghanistan", code: "AF", dial: "+93", flag: "🇦🇫" },
+  { name: "Albania", code: "AL", dial: "+355", flag: "🇦🇱" },
+  { name: "Algeria", code: "DZ", dial: "+213", flag: "🇩🇿" },
+  { name: "Argentina", code: "AR", dial: "+54", flag: "🇦🇷" },
+  { name: "Australia", code: "AU", dial: "+61", flag: "🇦🇺" },
+  { name: "Austria", code: "AT", dial: "+43", flag: "🇦🇹" },
+  { name: "Bangladesh", code: "BD", dial: "+880", flag: "🇧🇩" },
+  { name: "Belgium", code: "BE", dial: "+32", flag: "🇧🇪" },
+  { name: "Bolivia", code: "BO", dial: "+591", flag: "🇧🇴" },
+  { name: "Brazil", code: "BR", dial: "+55", flag: "🇧🇷" },
+  { name: "Canada", code: "CA", dial: "+1", flag: "🇨🇦" },
+  { name: "Chile", code: "CL", dial: "+56", flag: "🇨🇱" },
+  { name: "China", code: "CN", dial: "+86", flag: "🇨🇳" },
+  { name: "Colombia", code: "CO", dial: "+57", flag: "🇨🇴" },
+  { name: "Croatia", code: "HR", dial: "+385", flag: "🇭🇷" },
+  { name: "Czech Republic", code: "CZ", dial: "+420", flag: "🇨🇿" },
+  { name: "Denmark", code: "DK", dial: "+45", flag: "🇩🇰" },
+  { name: "Ecuador", code: "EC", dial: "+593", flag: "🇪🇨" },
+  { name: "Egypt", code: "EG", dial: "+20", flag: "🇪🇬" },
+  { name: "Ethiopia", code: "ET", dial: "+251", flag: "🇪🇹" },
+  { name: "Finland", code: "FI", dial: "+358", flag: "🇫🇮" },
+  { name: "France", code: "FR", dial: "+33", flag: "🇫🇷" },
+  { name: "Germany", code: "DE", dial: "+49", flag: "🇩🇪" },
+  { name: "Ghana", code: "GH", dial: "+233", flag: "🇬🇭" },
+  { name: "Greece", code: "GR", dial: "+30", flag: "🇬🇷" },
+  { name: "Hungary", code: "HU", dial: "+36", flag: "🇭🇺" },
+  { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
+  { name: "Indonesia", code: "ID", dial: "+62", flag: "🇮🇩" },
+  { name: "Iran", code: "IR", dial: "+98", flag: "🇮🇷" },
+  { name: "Iraq", code: "IQ", dial: "+964", flag: "🇮🇶" },
+  { name: "Ireland", code: "IE", dial: "+353", flag: "🇮🇪" },
+  { name: "Israel", code: "IL", dial: "+972", flag: "🇮🇱" },
+  { name: "Italy", code: "IT", dial: "+39", flag: "🇮🇹" },
+  { name: "Japan", code: "JP", dial: "+81", flag: "🇯🇵" },
+  { name: "Jordan", code: "JO", dial: "+962", flag: "🇯🇴" },
+  { name: "Kenya", code: "KE", dial: "+254", flag: "🇰🇪" },
+  { name: "South Korea", code: "KR", dial: "+82", flag: "🇰🇷" },
+  { name: "Malaysia", code: "MY", dial: "+60", flag: "🇲🇾" },
+  { name: "Mexico", code: "MX", dial: "+52", flag: "🇲🇽" },
+  { name: "Morocco", code: "MA", dial: "+212", flag: "🇲🇦" },
+  { name: "Myanmar", code: "MM", dial: "+95", flag: "🇲🇲" },
+  { name: "Nepal", code: "NP", dial: "+977", flag: "🇳🇵" },
+  { name: "Netherlands", code: "NL", dial: "+31", flag: "🇳🇱" },
+  { name: "New Zealand", code: "NZ", dial: "+64", flag: "🇳🇿" },
+  { name: "Nigeria", code: "NG", dial: "+234", flag: "🇳🇬" },
+  { name: "Norway", code: "NO", dial: "+47", flag: "🇳🇴" },
+  { name: "Pakistan", code: "PK", dial: "+92", flag: "🇵🇰" },
+  { name: "Peru", code: "PE", dial: "+51", flag: "🇵🇪" },
+  { name: "Philippines", code: "PH", dial: "+63", flag: "🇵🇭" },
+  { name: "Poland", code: "PL", dial: "+48", flag: "🇵🇱" },
+  { name: "Portugal", code: "PT", dial: "+351", flag: "🇵🇹" },
+  { name: "Romania", code: "RO", dial: "+40", flag: "🇷🇴" },
+  { name: "Russia", code: "RU", dial: "+7", flag: "🇷🇺" },
+  { name: "Saudi Arabia", code: "SA", dial: "+966", flag: "🇸🇦" },
+  { name: "South Africa", code: "ZA", dial: "+27", flag: "🇿🇦" },
+  { name: "Spain", code: "ES", dial: "+34", flag: "🇪🇸" },
+  { name: "Sri Lanka", code: "LK", dial: "+94", flag: "🇱🇰" },
+  { name: "Sweden", code: "SE", dial: "+46", flag: "🇸🇪" },
+  { name: "Switzerland", code: "CH", dial: "+41", flag: "🇨🇭" },
+  { name: "Taiwan", code: "TW", dial: "+886", flag: "🇹🇼" },
+  { name: "Tanzania", code: "TZ", dial: "+255", flag: "🇹🇿" },
+  { name: "Thailand", code: "TH", dial: "+66", flag: "🇹🇭" },
+  { name: "Turkey", code: "TR", dial: "+90", flag: "🇹🇷" },
+  { name: "Uganda", code: "UG", dial: "+256", flag: "🇺🇬" },
+  { name: "Ukraine", code: "UA", dial: "+380", flag: "🇺🇦" },
+  { name: "United Arab Emirates", code: "AE", dial: "+971", flag: "🇦🇪" },
+  { name: "United Kingdom", code: "GB", dial: "+44", flag: "🇬🇧" },
+  { name: "United States", code: "US", dial: "+1", flag: "🇺🇸" },
+  { name: "Venezuela", code: "VE", dial: "+58", flag: "🇻🇪" },
+  { name: "Vietnam", code: "VN", dial: "+84", flag: "🇻🇳" },
+  { name: "Zimbabwe", code: "ZW", dial: "+263", flag: "🇿🇼" },
+];
+
+const POPULAR_CODES = ["US", "IN", "GB", "AU", "CA", "AE", "DE", "FR", "BR", "JP"];
+
+// ─── Other data ───────────────────────────────────────────────────────────────
 const INTERESTS = [
   "Music", "Travel", "Food", "Fitness", "Gaming", "Reading",
   "Movies", "Art", "Photography", "Dancing", "Cooking", "Yoga",
   "Cricket", "Football", "Trekking", "Coffee", "Dogs", "Cats",
   "Startups", "Tech",
 ];
-
 const LOOKING_FOR = [
   { id: "chat", label: "Just Chat", icon: "chatbubble-outline" as const },
   { id: "audio", label: "Audio Call", icon: "call-outline" as const },
   { id: "video", label: "Video Call", icon: "videocam-outline" as const },
   { id: "meet", label: "Meet Up", icon: "people-outline" as const },
 ];
-
 const PERSONALITY = ["Introvert", "Extrovert", "Ambivert"];
 const RELATIONSHIP = ["Friendship", "Casual", "Serious", "Open to all"];
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 
+// ─── Country Picker Modal ──────────────────────────────────────────────────────
+function CountryPickerModal({
+  visible,
+  onClose,
+  onSelect,
+  selected,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (c: Country) => void;
+  selected: Country;
+}) {
+  const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState("");
+
+  const popular = COUNTRIES.filter((c) => POPULAR_CODES.includes(c.code));
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    if (!q) return COUNTRIES;
+    return COUNTRIES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.dial.includes(q) ||
+        c.code.toLowerCase().includes(q)
+    );
+  }, [search]);
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={[pickerStyles.container, { paddingTop: insets.top + 8 }]}>
+        {/* Handle */}
+        <View style={pickerStyles.handle} />
+
+        {/* Header */}
+        <View style={pickerStyles.header}>
+          <Text style={pickerStyles.title}>Select country code</Text>
+          <TouchableOpacity onPress={onClose} style={pickerStyles.closeBtn}>
+            <Ionicons name="close" size={20} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Search */}
+        <View style={pickerStyles.searchWrap}>
+          <Ionicons name="search" size={16} color="#9CA3AF" />
+          <TextInput
+            style={pickerStyles.searchInput}
+            placeholder="Search country or dial code..."
+            placeholderTextColor="#9CA3AF"
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")}>
+              <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <FlatList
+          data={filtered}
+          keyExtractor={(c) => c.code}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          ListHeaderComponent={
+            search.length === 0 ? (
+              <View>
+                <Text style={pickerStyles.sectionLabel}>Popular</Text>
+                {popular.map((c) => (
+                  <CountryRow
+                    key={c.code}
+                    country={c}
+                    isSelected={selected.code === c.code}
+                    onPress={() => { onSelect(c); onClose(); }}
+                  />
+                ))}
+                <View style={pickerStyles.divider} />
+                <Text style={pickerStyles.sectionLabel}>All countries</Text>
+              </View>
+            ) : null
+          }
+          renderItem={({ item: c }) => (
+            <CountryRow
+              country={c}
+              isSelected={selected.code === c.code}
+              onPress={() => { onSelect(c); onClose(); }}
+            />
+          )}
+        />
+      </View>
+    </Modal>
+  );
+}
+
+function CountryRow({
+  country,
+  isSelected,
+  onPress,
+}: {
+  country: Country;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[pickerStyles.row, isSelected && pickerStyles.rowSelected]}
+      activeOpacity={0.7}
+    >
+      <Text style={pickerStyles.flag}>{country.flag}</Text>
+      <Text style={[pickerStyles.countryName, isSelected && pickerStyles.countryNameSelected]}>
+        {country.name}
+      </Text>
+      <Text style={[pickerStyles.dialCode, isSelected && pickerStyles.dialCodeSelected]}>
+        {country.dial}
+      </Text>
+      {isSelected && (
+        <Ionicons name="checkmark-circle" size={18} color={QColors.primary} />
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const pickerStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#E5E7EB",
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  title: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    color: "#111827",
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    backgroundColor: "#F5F3FF",
+    borderWidth: 1.5,
+    borderColor: "#DDD6FE",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    color: "#111827",
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    color: "#9CA3AF",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: "#FAFAFA",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#F3F4F6",
+  },
+  rowSelected: {
+    backgroundColor: "#F5F3FF",
+  },
+  flag: {
+    fontSize: 22,
+    width: 32,
+    textAlign: "center",
+  },
+  countryName: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    color: "#111827",
+  },
+  countryNameSelected: {
+    fontFamily: "Inter_600SemiBold",
+    color: QColors.primary,
+  },
+  dialCode: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: "#9CA3AF",
+  },
+  dialCodeSelected: {
+    color: QColors.primary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 20,
+    marginVertical: 4,
+  },
+});
+
+// ─── Main Onboarding Screen ────────────────────────────────────────────────────
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { setUser, setToken, setOnboarded } = useAuth();
@@ -50,8 +366,12 @@ export default function OnboardingScreen() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<Country>(
+    COUNTRIES.find((c) => c.code === "US")!
+  );
+  const [countryText, setCountryText] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
 
   // Step 1
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -65,11 +385,9 @@ export default function OnboardingScreen() {
   const otpRefs = useRef<(TextInput | null)[]>([]);
 
   const animateToStep = (newStep: number) => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(slideAnim, { toValue: -20, duration: 180, useNativeDriver: true }),
-      ]),
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: -20, duration: 180, useNativeDriver: true }),
     ]).start(() => {
       setStep(newStep);
       slideAnim.setValue(20);
@@ -80,17 +398,28 @@ export default function OnboardingScreen() {
     });
   };
 
-  const toggleInterest = (i: string) => {
+  const handleCountrySelect = (c: Country) => {
+    setSelectedCountry(c);
+    setCountryText(c.name);
+  };
+
+  const handleCountryTextChange = (text: string) => {
+    setCountryText(text);
+    const match = COUNTRIES.find(
+      (c) => c.name.toLowerCase() === text.toLowerCase()
+    );
+    if (match) setSelectedCountry(match);
+  };
+
+  const toggleInterest = (i: string) =>
     setSelectedInterests((prev) =>
       prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]
     );
-  };
 
-  const toggleLooking = (id: string) => {
+  const toggleLooking = (id: string) =>
     setSelectedLooking((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
 
   const handleOtpChange = (text: string, idx: number) => {
     const newOtp = [...otp];
@@ -107,9 +436,9 @@ export default function OnboardingScreen() {
       age: parseInt(age) || 25,
       gender,
       city: city || "Unknown City",
-      country: country || "World",
-      phone,
-      bio: `${personality ? personality + " · " : ""}Based in ${city || "Unknown"}, ${country || "World"}`,
+      country: selectedCountry.name || "World",
+      phone: selectedCountry.dial + phone,
+      bio: `${personality ? personality + " · " : ""}Based in ${city || "Unknown"}, ${selectedCountry.name}`,
       interests: selectedInterests,
       lookingFor: selectedLooking,
       photos: [],
@@ -134,9 +463,9 @@ export default function OnboardingScreen() {
   const topPad = Platform.OS === "web" ? 24 : insets.top;
 
   const STEPS = [
-    { title: "Who are you?", subtitle: "Let's build your profile", icon: "person-circle-outline" as const },
-    { title: "Your vibe", subtitle: "What makes you, you?", icon: "heart-outline" as const },
-    { title: "Verify", subtitle: "Quick confirmation", icon: "shield-checkmark-outline" as const },
+    { title: "Who are you?", subtitle: "Let's build your profile" },
+    { title: "Your vibe", subtitle: "What makes you, you?" },
+    { title: "Verify", subtitle: "Quick confirmation" },
   ];
 
   return (
@@ -166,21 +495,27 @@ export default function OnboardingScreen() {
                 ]}
               >
                 {i < step ? (
-                  <Ionicons name="checkmark" size={12} color="#fff" />
+                  <Ionicons name="checkmark" size={12} color={QColors.primary} />
                 ) : (
-                  <Text style={[styles.progressDotNum, i === step && { color: QColors.primary }]}>
+                  <Text
+                    style={[
+                      styles.progressDotNum,
+                      i === step && { color: QColors.primary },
+                    ]}
+                  >
                     {i + 1}
                   </Text>
                 )}
               </View>
               {i < STEPS.length - 1 && (
-                <View style={[styles.progressLine, i < step && styles.progressLineDone]} />
+                <View
+                  style={[styles.progressLine, i < step && styles.progressLineDone]}
+                />
               )}
             </View>
           ))}
         </View>
 
-        {/* Current step info */}
         <View style={styles.stepInfo}>
           <Text style={styles.stepTitle}>{STEPS[step].title}</Text>
           <Text style={styles.stepSubtitle}>{STEPS[step].subtitle}</Text>
@@ -198,13 +533,13 @@ export default function OnboardingScreen() {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
+          {/* ─── STEP 0 ─────────────────────────────────────────────────── */}
           {step === 0 && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.stepContent}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Name row */}
               <View style={styles.inputRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputLabel}>First name *</Text>
@@ -215,7 +550,6 @@ export default function OnboardingScreen() {
                     value={firstName}
                     onChangeText={setFirstName}
                     autoCapitalize="words"
-                    returnKeyType="next"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -227,12 +561,10 @@ export default function OnboardingScreen() {
                     value={lastName}
                     onChangeText={setLastName}
                     autoCapitalize="words"
-                    returnKeyType="next"
                   />
                 </View>
               </View>
 
-              {/* Age */}
               <View>
                 <Text style={styles.inputLabel}>Age *</Text>
                 <TextInput
@@ -243,11 +575,9 @@ export default function OnboardingScreen() {
                   value={age}
                   onChangeText={setAge}
                   maxLength={2}
-                  returnKeyType="next"
                 />
               </View>
 
-              {/* Gender */}
               <View>
                 <Text style={styles.inputLabel}>Gender *</Text>
                 <View style={styles.pillRow}>
@@ -257,7 +587,9 @@ export default function OnboardingScreen() {
                       style={[styles.pill, gender === g && styles.pillActive]}
                       onPress={() => setGender(g)}
                     >
-                      <Text style={[styles.pillText, gender === g && styles.pillTextActive]}>
+                      <Text
+                        style={[styles.pillText, gender === g && styles.pillTextActive]}
+                      >
                         {g}
                       </Text>
                     </TouchableOpacity>
@@ -265,39 +597,44 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
-              {/* Country + City */}
               <View style={styles.inputRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputLabel}>Country</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Spain"
+                    placeholder="United States"
                     placeholderTextColor="#C4B5FD"
-                    value={country}
-                    onChangeText={setCountry}
-                    returnKeyType="next"
+                    value={countryText}
+                    onChangeText={handleCountryTextChange}
+                    autoCapitalize="words"
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>City</Text>
+                  <Text style={styles.inputLabel}>City / State</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Barcelona"
+                    placeholder="New York"
                     placeholderTextColor="#C4B5FD"
                     value={city}
                     onChangeText={setCity}
-                    returnKeyType="next"
+                    autoCapitalize="words"
                   />
                 </View>
               </View>
 
-              {/* Phone */}
+              {/* Phone with country code picker */}
               <View>
                 <Text style={styles.inputLabel}>Phone number</Text>
                 <View style={styles.phoneRow}>
-                  <View style={styles.phonePrefixBox}>
-                    <Text style={styles.phonePrefixText}>+1</Text>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.dialBtn}
+                    onPress={() => setShowPicker(true)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={styles.dialFlag}>{selectedCountry.flag}</Text>
+                    <Text style={styles.dialCode}>{selectedCountry.dial}</Text>
+                    <Ionicons name="chevron-down" size={13} color={QColors.primary} />
+                  </TouchableOpacity>
                   <TextInput
                     style={[styles.input, { flex: 1 }]}
                     placeholder="(555) 000-0000"
@@ -307,6 +644,14 @@ export default function OnboardingScreen() {
                     onChangeText={setPhone}
                   />
                 </View>
+                {/* Selected country display */}
+                {selectedCountry && (
+                  <View style={styles.countryTag}>
+                    <Text style={styles.countryTagFlag}>{selectedCountry.flag}</Text>
+                    <Text style={styles.countryTagText}>{selectedCountry.name}</Text>
+                    <Text style={styles.countryTagDial}>{selectedCountry.dial}</Text>
+                  </View>
+                )}
               </View>
 
               <TouchableOpacity
@@ -328,17 +673,22 @@ export default function OnboardingScreen() {
             </ScrollView>
           )}
 
+          {/* ─── STEP 1 ─────────────────────────────────────────────────── */}
           {step === 1 && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.stepContent}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Interests */}
               <View>
                 <View style={styles.labelRow}>
                   <Text style={styles.inputLabel}>Pick your interests</Text>
-                  <Text style={[styles.countBadge, selectedInterests.length >= 3 && styles.countBadgeDone]}>
+                  <Text
+                    style={[
+                      styles.countBadge,
+                      selectedInterests.length >= 3 && styles.countBadgeDone,
+                    ]}
+                  >
                     {selectedInterests.length}/3 min
                   </Text>
                 </View>
@@ -351,7 +701,12 @@ export default function OnboardingScreen() {
                         onPress={() => toggleInterest(interest)}
                         style={[styles.interestChip, active && styles.interestChipActive]}
                       >
-                        <Text style={[styles.interestChipText, active && styles.interestChipTextActive]}>
+                        <Text
+                          style={[
+                            styles.interestChipText,
+                            active && styles.interestChipTextActive,
+                          ]}
+                        >
                           {interest}
                         </Text>
                       </TouchableOpacity>
@@ -360,7 +715,6 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
-              {/* Looking for */}
               <View>
                 <Text style={styles.inputLabel}>I'm looking for</Text>
                 <View style={styles.lookingGrid}>
@@ -377,7 +731,12 @@ export default function OnboardingScreen() {
                           size={24}
                           color={active ? QColors.primary : "#9CA3AF"}
                         />
-                        <Text style={[styles.lookingLabel, active && styles.lookingLabelActive]}>
+                        <Text
+                          style={[
+                            styles.lookingLabel,
+                            active && styles.lookingLabelActive,
+                          ]}
+                        >
                           {l.label}
                         </Text>
                       </TouchableOpacity>
@@ -386,7 +745,6 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
-              {/* Personality */}
               <View>
                 <Text style={styles.inputLabel}>Personality type</Text>
                 <View style={styles.pillRow}>
@@ -396,13 +754,16 @@ export default function OnboardingScreen() {
                       style={[styles.pill, personality === p && styles.pillActive]}
                       onPress={() => setPersonality(p)}
                     >
-                      <Text style={[styles.pillText, personality === p && styles.pillTextActive]}>{p}</Text>
+                      <Text
+                        style={[styles.pillText, personality === p && styles.pillTextActive]}
+                      >
+                        {p}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
-              {/* Relationship */}
               <View>
                 <Text style={styles.inputLabel}>Relationship style</Text>
                 <View style={styles.pillRow}>
@@ -412,18 +773,29 @@ export default function OnboardingScreen() {
                       style={[styles.pill, relationship === r && styles.pillActive]}
                       onPress={() => setRelationship(r)}
                     >
-                      <Text style={[styles.pillText, relationship === r && styles.pillTextActive]}>{r}</Text>
+                      <Text
+                        style={[styles.pillText, relationship === r && styles.pillTextActive]}
+                      >
+                        {r}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => animateToStep(0)}>
+                <TouchableOpacity
+                  style={styles.backBtn}
+                  onPress={() => animateToStep(0)}
+                >
                   <Ionicons name="arrow-back" size={18} color={QColors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.primaryBtn, { flex: 1 }, !step1Valid && styles.primaryBtnDisabled]}
+                  style={[
+                    styles.primaryBtn,
+                    { flex: 1 },
+                    !step1Valid && styles.primaryBtnDisabled,
+                  ]}
                   onPress={() => step1Valid && animateToStep(2)}
                   activeOpacity={step1Valid ? 0.85 : 1}
                 >
@@ -440,13 +812,14 @@ export default function OnboardingScreen() {
             </ScrollView>
           )}
 
+          {/* ─── STEP 2 ─────────────────────────────────────────────────── */}
           {step === 2 && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.stepContent}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Phone display */}
+              {/* Phone display card */}
               <View style={styles.phoneCard}>
                 <LinearGradient
                   colors={[QColors.primaryLight, "#FCE7F3"]}
@@ -454,10 +827,12 @@ export default function OnboardingScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.phoneCardGradient}
                 >
-                  <Ionicons name="phone-portrait-outline" size={22} color={QColors.primary} />
+                  <Text style={styles.phoneCardFlag}>{selectedCountry.flag}</Text>
                   <View>
-                    <Text style={styles.phoneCardLabel}>Sending code to</Text>
-                    <Text style={styles.phoneCardNumber}>{phone || "Your phone number"}</Text>
+                    <Text style={styles.phoneCardLabel}>Sending OTP to</Text>
+                    <Text style={styles.phoneCardNumber}>
+                      {selectedCountry.dial} {phone || "—"}
+                    </Text>
                   </View>
                 </LinearGradient>
               </View>
@@ -473,7 +848,7 @@ export default function OnboardingScreen() {
                     </LinearGradient>
                     <Text style={styles.otpTitle}>Secure Verification</Text>
                     <Text style={styles.otpDesc}>
-                      We'll send a 6-digit OTP to verify your identity. Standard message rates may apply.
+                      We'll send a 6-digit OTP to verify your phone number. Standard message rates may apply.
                     </Text>
                   </View>
 
@@ -521,11 +896,18 @@ export default function OnboardingScreen() {
                   </View>
 
                   <View style={styles.btnRow}>
-                    <TouchableOpacity style={styles.backBtn} onPress={() => animateToStep(1)}>
+                    <TouchableOpacity
+                      style={styles.backBtn}
+                      onPress={() => animateToStep(1)}
+                    >
                       <Ionicons name="arrow-back" size={18} color={QColors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.primaryBtn, { flex: 1 }, !step2Valid && styles.primaryBtnDisabled]}
+                      style={[
+                        styles.primaryBtn,
+                        { flex: 1 },
+                        !step2Valid && styles.primaryBtnDisabled,
+                      ]}
                       onPress={() => step2Valid && handleFinish()}
                       activeOpacity={step2Valid ? 0.85 : 1}
                     >
@@ -540,7 +922,9 @@ export default function OnboardingScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  <Pressable onPress={() => { setOtp(["","","","","",""]); setOtpSent(false); }}>
+                  <Pressable
+                    onPress={() => { setOtp(["", "", "", "", "", ""]); setOtpSent(false); }}
+                  >
                     <Text style={styles.resendText}>Didn't receive it? Resend OTP</Text>
                   </Pressable>
                 </View>
@@ -556,10 +940,19 @@ export default function OnboardingScreen() {
           )}
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* Country Picker Modal */}
+      <CountryPickerModal
+        visible={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={handleCountrySelect}
+        selected={selectedCountry}
+      />
     </View>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -596,13 +989,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255,255,255,0.2)",
   },
   progressDotActive: {
     backgroundColor: "#fff",
   },
   progressDotDone: {
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "#fff",
   },
   progressDotFuture: {
     backgroundColor: "rgba(255,255,255,0.2)",
@@ -689,26 +1082,57 @@ const styles = StyleSheet.create({
   pillTextActive: {
     color: QColors.primary,
   },
+  // Phone
   phoneRow: {
     flexDirection: "row",
     gap: 10,
     alignItems: "center",
   },
-  phonePrefixBox: {
+  dialBtn: {
     height: 52,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     backgroundColor: "#F5F3FF",
     borderWidth: 1.5,
     borderColor: "#DDD6FE",
     borderRadius: 12,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 5,
+    minWidth: 88,
   },
-  phonePrefixText: {
-    fontSize: 15,
+  dialFlag: {
+    fontSize: 20,
+  },
+  dialCode: {
+    fontSize: 14,
     fontFamily: "Inter_600SemiBold",
     color: QColors.primary,
   },
+  countryTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: QColors.primaryLight,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+  },
+  countryTagFlag: {
+    fontSize: 15,
+  },
+  countryTagText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: QColors.primary,
+  },
+  countryTagDial: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: QColors.primaryDark,
+  },
+  // Buttons
   primaryBtn: {
     height: 54,
     borderRadius: 14,
@@ -732,6 +1156,22 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontFamily: "Inter_400Regular",
   },
+  btnRow: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+  },
+  backBtn: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#DDD6FE",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F5F3FF",
+  },
+  // Step 1
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -803,21 +1243,7 @@ const styles = StyleSheet.create({
   lookingLabelActive: {
     color: QColors.primary,
   },
-  btnRow: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
-  },
-  backBtn: {
-    width: 54,
-    height: 54,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "#DDD6FE",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F5F3FF",
-  },
+  // Step 2
   phoneCard: {
     borderRadius: 16,
     overflow: "hidden",
@@ -828,6 +1254,9 @@ const styles = StyleSheet.create({
     gap: 14,
     padding: 16,
   },
+  phoneCardFlag: {
+    fontSize: 32,
+  },
   phoneCardLabel: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
@@ -836,8 +1265,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   phoneCardNumber: {
-    fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
     color: "#111827",
     marginTop: 2,
   },
