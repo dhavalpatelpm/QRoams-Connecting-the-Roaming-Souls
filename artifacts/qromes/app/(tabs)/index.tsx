@@ -112,6 +112,21 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
+      {/* Location bar */}
+      <TouchableOpacity
+        style={styles.locationBar}
+        onPress={() => router.push("/(tabs)/profile")}
+        activeOpacity={0.75}
+      >
+        <Ionicons name="location" size={13} color={QColors.primary} />
+        <Text style={styles.locationText} numberOfLines={1}>
+          {(user?.city || user?.country)
+            ? [user.city, user.country].filter(Boolean).join(", ")
+            : "Set your location"}
+        </Text>
+        <Ionicons name="create-outline" size={12} color={QColors.primary} />
+      </TouchableOpacity>
+
       {/* Swipe hint */}
       <View style={styles.hintRow}>
         <View style={[styles.hint, { backgroundColor: QColors.primary + "20" }]}>
@@ -292,6 +307,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontFamily: "Inter_700Bold",
+  },
+  locationBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    marginHorizontal: 20,
+    marginBottom: 10,
+    gap: 5,
+    backgroundColor: QColors.primaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#DDD6FE",
+    maxWidth: "80%",
+  },
+  locationText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: QColors.primary,
+    flexShrink: 1,
   },
   hintRow: {
     flexDirection: "row",
