@@ -172,7 +172,7 @@ export default function DiscoverScreen() {
 
       {/* Action buttons */}
       {!isEmpty && (
-        <View style={[styles.actions, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 90 }]}>
+        <View style={[styles.actions, { paddingBottom: Platform.OS === "web" ? 78 : insets.bottom + 100 }]}>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: QColors.primary + "15" }]}
             onPress={() => handleAudioCall(currentProfile)}
