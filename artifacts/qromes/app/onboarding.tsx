@@ -373,6 +373,7 @@ export default function OnboardingScreen() {
   const [gender, setGender] = useState("");
   const [city, setCity] = useState("");
   const [stateProvince, setStateProvince] = useState("");
+  const [occupation, setOccupation] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<Country>(
     COUNTRIES.find((c) => c.code === "US")!
   );
@@ -509,7 +510,7 @@ export default function OnboardingScreen() {
       photos: onboardPhotos,
       coinBalance: 100,
       isOnline: true,
-      occupation: "",
+      occupation: occupation || "",
       education: "",
       languages: ["English"],
       personalityType: personality.toLowerCase(),
@@ -738,6 +739,19 @@ export default function OnboardingScreen() {
                     autoCapitalize="words"
                   />
                 </View>
+              </View>
+
+              {/* Profession */}
+              <View>
+                <Text style={styles.inputLabel}>Profession</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Software Engineer"
+                  placeholderTextColor="#C4B5FD"
+                  value={occupation}
+                  onChangeText={setOccupation}
+                  autoCapitalize="words"
+                />
               </View>
 
               {/* Phone with country code picker */}

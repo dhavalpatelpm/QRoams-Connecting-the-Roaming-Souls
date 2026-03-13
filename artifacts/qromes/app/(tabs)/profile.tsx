@@ -350,14 +350,18 @@ export default function ProfileScreen() {
           </Text>
 
           {/* Coin balance */}
-          <View style={styles.coinRow}>
-            <Ionicons name="flash" size={16} color={QColors.gold} />
-            <Text style={styles.coinText}>{user?.coinBalance ?? 100} coins</Text>
-            <TouchableOpacity style={styles.addCoins}>
-              <Ionicons name="add" size={14} color="#fff" />
-              <Text style={styles.addCoinsText}>Add</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.coinRow} onPress={() => router.push("/(tabs)/coins")} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[QColors.gold, "#F97316"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+            />
+            <Ionicons name="flash" size={14} color="#fff" />
+            <Text style={styles.coinText}>{user?.coinBalance ?? 100}</Text>
+            <View style={styles.coinDivider} />
+            <Ionicons name="add-circle" size={18} color="#fff" />
+          </TouchableOpacity>
         </LinearGradient>
 
         {/* ─── Stats ─────────────────────────────────────────────────────── */}
@@ -1010,17 +1014,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    overflow: "hidden",
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    marginTop: 4,
+    marginTop: 6,
+    alignSelf: "center",
   },
   coinText: {
     color: "#fff",
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+  },
+  coinDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: "rgba(255,255,255,0.4)",
+    marginHorizontal: 2,
   },
   addCoins: {
     flexDirection: "row",
