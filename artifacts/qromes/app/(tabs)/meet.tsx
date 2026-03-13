@@ -181,9 +181,15 @@ export default function MeetScreen() {
               </Text>
             </View>
             {proposedIds.has(person.id) ? (
-              <View style={[styles.proposeBtn, { backgroundColor: "#E5E7EB" }]}>
-                <Ionicons name="checkmark-circle" size={15} color="#10B981" />
-                <Text style={[styles.proposeBtnText, { color: "#6B7280" }]}>Proposed</Text>
+              <View style={[styles.proposeBtn, { flexDirection: "row", gap: 5 }]}>
+                <LinearGradient
+                  colors={[QColors.primary, QColors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Ionicons name="checkmark-circle" size={15} color="#fff" />
+                <Text style={styles.proposeBtnText}>Proposed</Text>
               </View>
             ) : (
               <TouchableOpacity

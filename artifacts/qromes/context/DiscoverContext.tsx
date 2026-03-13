@@ -33,6 +33,7 @@ type DiscoverContextValue = DiscoverState & {
   swipeLeft: (id: string) => void;
   swipeRight: (id: string) => void;
   nextProfile: () => void;
+  undoProfile: () => void;
   resetFeed: () => void;
 };
 
@@ -195,12 +196,19 @@ export function DiscoverProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, currentIndex: s.currentIndex + 1 }));
   };
 
+  const undoProfile = () => {
+    setState((s) => {
+      if (s.currentIndex <= 0) return s;
+      return { ...s, currentIndex: s.currentIndex - 1 };
+    });
+  };
+
   const resetFeed = () => {
     setState((s) => ({ ...s, currentIndex: 0, skippedProfiles: [] }));
   };
 
   return (
-    <DiscoverContext.Provider value={{ ...state, swipeLeft, swipeRight, nextProfile, resetFeed }}>
+    <DiscoverContext.Provider value={{ ...state, swipeLeft, swipeRight, nextProfile, undoProfile, resetFeed }}>
       {children}
     </DiscoverContext.Provider>
   );

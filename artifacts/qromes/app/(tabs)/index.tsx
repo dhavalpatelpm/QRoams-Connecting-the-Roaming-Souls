@@ -3,8 +3,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
   Image,
   Platform,
@@ -28,10 +29,54 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
-  const { profiles, currentIndex, swipeLeft, swipeRight, nextProfile, resetFeed } = useDiscover();
+  const { profiles, currentIndex, swipeLeft, swipeRight, nextProfile, undoProfile, resetFeed } = useDiscover();
   const { createOrGetConversation } = useChat();
   const { user } = useAuth();
   const [selectedProfile, setSelectedProfile] = useState<ProfileCardType | null>(null);
+  const [showSuperLike, setShowSuperLike] = useState(false);
+
+  // Super-like confetti: 8 hearts at staggered positions
+  const HEART_CFG = [
+    { emoji: "❤️", x: -130, delay: 0 },
+    { emoji: "💜", x: -70, delay: 50 },
+    { emoji: "💖", x: -20, delay: 100 },
+    { emoji: "⭐", x: 30, delay: 50 },
+    { emoji: "💗", x: 80, delay: 0 },
+    { emoji: "🌟", x: -100, delay: 150 },
+    { emoji: "💝", x: 110, delay: 150 },
+    { emoji: "✨", x: 0, delay: 200 },
+  ];
+  const heartAnims = useRef(
+    HEART_CFG.map(() => ({
+      y: new Animated.Value(0),
+      opacity: new Animated.Value(0),
+      scale: new Animated.Value(0.3),
+    }))
+  ).current;
+
+  const triggerSuperLike = () => {
+    heartAnims.forEach((a) => {
+      a.y.setValue(0);
+      a.opacity.setValue(0);
+      a.scale.setValue(0.3);
+    });
+    setShowSuperLike(true);
+    Animated.stagger(
+      60,
+      heartAnims.map((a) =>
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(a.opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+            Animated.spring(a.scale, { toValue: 1.2, useNativeDriver: true }),
+          ]),
+          Animated.parallel([
+            Animated.timing(a.y, { toValue: -SCREEN_H * 0.55, duration: 1100, useNativeDriver: true }),
+            Animated.timing(a.opacity, { toValue: 0, duration: 900, delay: 200, useNativeDriver: true }),
+          ]),
+        ])
+      )
+    ).start(() => setShowSuperLike(false));
+  };
 
   const currentProfile = profiles[currentIndex];
   const nextProfileCard = profiles[currentIndex + 1];
@@ -75,14 +120,14 @@ export default function DiscoverScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
         <View style={styles.headerLeft}>
-          <QRomesLogo size={28} />
+          <QRomesLogo size={42} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>QRomes</Text>
         </View>
 
         <View style={styles.headerRight}>
           {/* Top row: coins + avatar */}
           <View style={styles.headerRightRow}>
-            <TouchableOpacity style={styles.coinBadge}>
+            <TouchableOpacity style={styles.coinBadge} onPress={() => router.push("/(tabs)/coins")}>
               <LinearGradient
                 colors={[QColors.gold, "#F97316"]}
                 start={{ x: 0, y: 0 }}
@@ -200,10 +245,15 @@ export default function DiscoverScreen() {
       {/* Tinder-style Action Buttons */}
       {!isEmpty && (
         <View style={[styles.actions, { paddingBottom: insets.bottom + 62 }]}>
-          {/* Undo */}
+          {/* Undo — restore last skipped */}
           <TouchableOpacity
-            style={[styles.actionRing, { borderColor: QColors.gold }]}
-            onPress={() => nextProfile()}
+            style={[styles.actionRing, { borderColor: QColors.gold, opacity: currentIndex > 0 ? 1 : 0.35 }]}
+            onPress={() => {
+              if (currentIndex > 0) {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                undoProfile();
+              }
+            }}
           >
             <Ionicons name="arrow-undo" size={22} color={QColors.gold} />
           </TouchableOpacity>
@@ -221,6 +271,7 @@ export default function DiscoverScreen() {
             style={[styles.actionRing, { borderColor: "#3B82F6" }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              triggerSuperLike();
               nextProfile();
             }}
           >
@@ -260,6 +311,30 @@ export default function DiscoverScreen() {
         onVideoCall={() => handleVideoCall(selectedProfile!)}
         onChat={() => handleChat(selectedProfile!)}
       />
+
+      {/* ─── Super-like Hearts Overlay ─────────────────────────────────── */}
+      {showSuperLike && (
+        <View
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        >
+          {heartAnims.map((anim, i) => (
+            <Animated.Text
+              key={i}
+              style={{
+                position: "absolute",
+                bottom: "28%",
+                left: SCREEN_W / 2 + HEART_CFG[i].x - 18,
+                fontSize: 34,
+                transform: [{ translateY: anim.y }, { scale: anim.scale }],
+                opacity: anim.opacity,
+              }}
+            >
+              {HEART_CFG[i].emoji}
+            </Animated.Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -282,9 +357,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: "Inter_700Bold",
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   headerRight: {
     flexDirection: "column",
