@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Dimensions,
+  Image,
   Platform,
   StyleSheet,
   Text,
@@ -95,18 +96,28 @@ export default function DiscoverScreen() {
             onPress={() => router.push("/(tabs)/profile")}
             activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={[QColors.primary, QColors.accent]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            {user?.firstName ? (
-              <Text style={styles.profileAvatarInitial}>
-                {user.firstName[0].toUpperCase()}
-              </Text>
+            {user?.photos?.[0] ? (
+              <Image
+                source={{ uri: user.photos[0] }}
+                style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
+                resizeMode="cover"
+              />
             ) : (
-              <Ionicons name="person" size={16} color="#fff" />
+              <>
+                <LinearGradient
+                  colors={[QColors.primary, QColors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                {user?.firstName ? (
+                  <Text style={styles.profileAvatarInitial}>
+                    {user.firstName[0].toUpperCase()}
+                  </Text>
+                ) : (
+                  <Ionicons name="person" size={16} color="#fff" />
+                )}
+              </>
             )}
           </TouchableOpacity>
         </View>

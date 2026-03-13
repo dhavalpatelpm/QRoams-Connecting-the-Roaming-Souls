@@ -7,15 +7,14 @@ import {
   Platform,
   StyleSheet,
   View,
-  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QColors } from "@/constants/colors";
+import { useThemeContext } from "@/context/ThemeContext";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { isDark } = useThemeContext();
   const safeAreaInsets = useSafeAreaInsets();
-  const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
 

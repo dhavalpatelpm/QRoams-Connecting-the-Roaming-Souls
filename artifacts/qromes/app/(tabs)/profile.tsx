@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QColors } from "@/constants/colors";
 import { useTheme } from "@/constants/theme";
 import { useAuth, User } from "@/context/AuthContext";
+import { useThemeContext } from "@/context/ThemeContext";
 
 const INTERESTS_ALL = [
   "Music", "Travel", "Food", "Fitness", "Gaming", "Reading",
@@ -45,6 +46,7 @@ const GENDER_OPTIONS = ["Male", "Female", "Non-binary", "Other"];
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
+  const { toggle: toggleTheme } = useThemeContext();
   const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -145,6 +147,13 @@ export default function ProfileScreen() {
   };
 
   // Photo picker
+  const applyPhoto = async (uri: string) => {
+    const newPhotos = [uri, ...(draft.photos?.slice(0, 5) ?? [])];
+    setDraft((prev) => ({ ...prev, photos: newPhotos }));
+    // Persist immediately so it shows everywhere (no need to press Save)
+    await updateUser({ photos: newPhotos });
+  };
+
   const pickFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -155,11 +164,16 @@ export default function ProfileScreen() {
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.85,
+      quality: 0.7,
+      base64: Platform.OS === "web",
     });
     if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setDraft((prev) => ({ ...prev, photos: [uri, ...(prev.photos?.slice(0, 5) ?? [])] }));
+      const asset = result.assets[0];
+      const uri =
+        Platform.OS === "web" && asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+      await applyPhoto(uri);
     }
   };
 
@@ -173,11 +187,16 @@ export default function ProfileScreen() {
       cameraType: ImagePicker.CameraType.front,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.85,
+      quality: 0.7,
+      base64: Platform.OS === "web",
     });
     if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setDraft((prev) => ({ ...prev, photos: [uri, ...(prev.photos?.slice(0, 5) ?? [])] }));
+      const asset = result.assets[0];
+      const uri =
+        Platform.OS === "web" && asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+      await applyPhoto(uri);
     }
   };
 
@@ -655,6 +674,15 @@ export default function ProfileScreen() {
                 PREFERENCES
               </Text>
               <View style={[styles.settingsCard, { backgroundColor: isDark ? colors.backgroundSecondary : "#F9FAFB" }]}>
+                <SettingsRow
+                  icon={isDark ? "moon" : "sunny-outline"}
+                  label="Dark Mode"
+                  toggle
+                  value={isDark}
+                  onToggle={() => toggleTheme()}
+                  colors={colors}
+                />
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: isDark ? colors.border : "#E5E7EB" }} />
                 <SettingsRow
                   icon="notifications-outline"
                   label="Notifications"

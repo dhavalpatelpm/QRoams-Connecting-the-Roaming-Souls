@@ -1,12 +1,4 @@
-import { useColorScheme } from "react-native";
-import { QColors } from "./colors";
-
-export function useTheme() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const colors = isDark ? QColors.dark : QColors.light;
-  return { isDark, colors, Q: QColors };
-}
+export { useThemeContext as useTheme } from "@/context/ThemeContext";
 
 export const Spacing = {
   xs: 4,
