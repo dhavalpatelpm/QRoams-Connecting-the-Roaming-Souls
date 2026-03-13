@@ -365,15 +365,29 @@ export default function OnboardingScreen() {
   // Step 0
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [age, setAge] = useState("");
+  const [dobDay, setDobDay] = useState("");
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobYear, setDobYear] = useState("");
+  const dobMonthRef = useRef<TextInput>(null);
+  const dobYearRef = useRef<TextInput>(null);
   const [gender, setGender] = useState("");
   const [city, setCity] = useState("");
+  const [stateProvince, setStateProvince] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<Country>(
     COUNTRIES.find((c) => c.code === "US")!
   );
   const [countryText, setCountryText] = useState("");
   const [phone, setPhone] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+
+  const calcAgeFromDob = (): number => {
+    const d = parseInt(dobDay), m = parseInt(dobMonth), y = parseInt(dobYear);
+    if (!d || !m || !y || y < 1900) return 25;
+    const today = new Date();
+    let a = today.getFullYear() - y;
+    if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) a--;
+    return Math.max(1, Math.min(120, a));
+  };
 
   // Step 1
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -477,16 +491,19 @@ export default function OnboardingScreen() {
   };
 
   const handleFinish = async () => {
+    const dob = dobDay && dobMonth && dobYear ? `${dobDay.padStart(2,"0")}/${dobMonth.padStart(2,"0")}/${dobYear}` : "";
     const mockUser = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       firstName: firstName || "QRomian",
       lastName: lastName || "",
-      age: parseInt(age) || 25,
+      age: calcAgeFromDob(),
+      dob,
       gender,
       city: city || "Unknown City",
+      state: stateProvince || "",
       country: selectedCountry.name || "World",
       phone: selectedCountry.dial + phone,
-      bio: `${personality ? personality + " · " : ""}Based in ${city || "Unknown"}, ${selectedCountry.name}`,
+      bio: `${personality ? personality + " · " : ""}Based in ${[city, stateProvince, selectedCountry.name].filter(Boolean).join(", ")}`,
       interests: selectedInterests,
       lookingFor: selectedLooking,
       photos: onboardPhotos,
@@ -504,7 +521,8 @@ export default function OnboardingScreen() {
     router.replace("/(tabs)");
   };
 
-  const step0Valid = firstName.length > 0 && age.length > 0 && gender.length > 0;
+  const dobValid = dobDay.length > 0 && dobMonth.length > 0 && dobYear.length === 4;
+  const step0Valid = firstName.length > 0 && dobValid && gender.length > 0;
   const step1Valid = selectedInterests.length >= 3 && selectedLooking.length >= 1;
   const step3Valid = otp.join("").length === 6;
 
@@ -615,16 +633,55 @@ export default function OnboardingScreen() {
               </View>
 
               <View>
-                <Text style={styles.inputLabel}>Age *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="25"
-                  placeholderTextColor="#C4B5FD"
-                  keyboardType="numeric"
-                  value={age}
-                  onChangeText={setAge}
-                  maxLength={2}
-                />
+                <Text style={styles.inputLabel}>Date of birth *</Text>
+                <View style={styles.dobRow}>
+                  <View style={styles.dobSegment}>
+                    <TextInput
+                      style={[styles.input, styles.dobInput]}
+                      placeholder="DD"
+                      placeholderTextColor="#C4B5FD"
+                      keyboardType="numeric"
+                      value={dobDay}
+                      maxLength={2}
+                      onChangeText={(t) => {
+                        setDobDay(t);
+                        if (t.length === 2) dobMonthRef.current?.focus();
+                      }}
+                    />
+                    <Text style={styles.dobLabel}>Day</Text>
+                  </View>
+                  <View style={styles.dobSep}><Text style={styles.dobSepText}>/</Text></View>
+                  <View style={styles.dobSegment}>
+                    <TextInput
+                      ref={dobMonthRef}
+                      style={[styles.input, styles.dobInput]}
+                      placeholder="MM"
+                      placeholderTextColor="#C4B5FD"
+                      keyboardType="numeric"
+                      value={dobMonth}
+                      maxLength={2}
+                      onChangeText={(t) => {
+                        setDobMonth(t);
+                        if (t.length === 2) dobYearRef.current?.focus();
+                      }}
+                    />
+                    <Text style={styles.dobLabel}>Month</Text>
+                  </View>
+                  <View style={styles.dobSep}><Text style={styles.dobSepText}>/</Text></View>
+                  <View style={[styles.dobSegment, { flex: 2 }]}>
+                    <TextInput
+                      ref={dobYearRef}
+                      style={[styles.input, styles.dobInput]}
+                      placeholder="YYYY"
+                      placeholderTextColor="#C4B5FD"
+                      keyboardType="numeric"
+                      value={dobYear}
+                      maxLength={4}
+                      onChangeText={setDobYear}
+                    />
+                    <Text style={styles.dobLabel}>Year</Text>
+                  </View>
+                </View>
               </View>
 
               <View>
@@ -646,26 +703,38 @@ export default function OnboardingScreen() {
                 </View>
               </View>
 
+              <View>
+                <Text style={styles.inputLabel}>Country</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="United States"
+                  placeholderTextColor="#C4B5FD"
+                  value={countryText}
+                  onChangeText={handleCountryTextChange}
+                  autoCapitalize="words"
+                />
+              </View>
+
               <View style={styles.inputRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Country</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="United States"
-                    placeholderTextColor="#C4B5FD"
-                    value={countryText}
-                    onChangeText={handleCountryTextChange}
-                    autoCapitalize="words"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>City / State</Text>
+                  <Text style={styles.inputLabel}>City</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="New York"
                     placeholderTextColor="#C4B5FD"
                     value={city}
                     onChangeText={setCity}
+                    autoCapitalize="words"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabel}>State / Province</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Gujarat"
+                    placeholderTextColor="#C4B5FD"
+                    value={stateProvince}
+                    onChangeText={setStateProvince}
                     autoCapitalize="words"
                   />
                 </View>
@@ -1523,6 +1592,35 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontFamily: "Inter_400Regular",
     marginTop: 10,
+  },
+  dobRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 4,
+  },
+  dobSegment: {
+    flex: 1,
+    alignItems: "center",
+  },
+  dobInput: {
+    textAlign: "center",
+    letterSpacing: 2,
+  },
+  dobLabel: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    fontFamily: "Inter_400Regular",
+    marginTop: 3,
+  },
+  dobSep: {
+    paddingTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dobSepText: {
+    fontSize: 20,
+    color: "#C4B5FD",
+    fontFamily: "Inter_700Bold",
   },
   photoStepIntro: {
     alignItems: "center",

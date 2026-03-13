@@ -179,8 +179,8 @@ export default function DiscoverScreen() {
               style={[styles.locationPillText, { color: isDark ? "#A78BFA" : QColors.primary }]}
               numberOfLines={1}
             >
-              {(user?.city || user?.country)
-                ? [user.city, user.country].filter(Boolean).join(", ")
+              {(user?.city || user?.state || user?.country)
+                ? [user.city, user.state, user.country].filter(Boolean).join(", ")
                 : "Set location"}
             </Text>
           </TouchableOpacity>

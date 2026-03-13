@@ -6,8 +6,10 @@ export type User = {
   firstName: string;
   lastName: string;
   age: number;
+  dob?: string;
   gender: string;
   city: string;
+  state?: string;
   country: string;
   phone: string;
   bio?: string;

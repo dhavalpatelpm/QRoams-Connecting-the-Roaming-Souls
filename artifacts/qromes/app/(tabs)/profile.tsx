@@ -66,9 +66,11 @@ export default function ProfileScreen() {
         firstName: user.firstName,
         lastName: user.lastName,
         age: user.age,
+        dob: user.dob ?? "",
         gender: user.gender,
         bio: user.bio ?? "",
         city: user.city,
+        state: user.state ?? "",
         country: user.country,
         phone: user.phone,
         occupation: user.occupation ?? "",
@@ -95,9 +97,11 @@ export default function ProfileScreen() {
         firstName: user.firstName,
         lastName: user.lastName,
         age: user.age,
+        dob: user.dob ?? "",
         gender: user.gender,
         bio: user.bio ?? "",
         city: user.city,
+        state: user.state ?? "",
         country: user.country,
         phone: user.phone,
         occupation: user.occupation ?? "",
@@ -342,7 +346,7 @@ export default function ProfileScreen() {
           )}
 
           <Text style={styles.locationDisplay}>
-            {[displayUser?.city, displayUser?.country].filter(Boolean).join(", ") || "Location not set"}
+            {[displayUser?.city, displayUser?.state, displayUser?.country].filter(Boolean).join(", ") || "Location not set"}
           </Text>
 
           {/* Coin balance */}
@@ -388,15 +392,14 @@ export default function ProfileScreen() {
             {/* Basic Info */}
             <SectionHeader title="Basic Info" />
             <View style={styles.formCard}>
-              <FormRow label="Age">
+              <FormRow label="Date of Birth">
                 <TextInput
                   style={styles.formInput}
-                  value={String(draft.age ?? "")}
-                  onChangeText={(t) => setField("age", parseInt(t) || 0)}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  placeholder="25"
+                  value={draft.dob ?? ""}
+                  onChangeText={(t) => setField("dob", t)}
+                  placeholder="DD/MM/YYYY"
                   placeholderTextColor="#C4B5FD"
+                  keyboardType="numeric"
                 />
               </FormRow>
               <Divider />
@@ -444,12 +447,23 @@ export default function ProfileScreen() {
                 />
               </FormRow>
               <Divider />
-              <FormRow label="City / State">
+              <FormRow label="City">
                 <TextInput
                   style={styles.formInput}
                   value={draft.city ?? ""}
                   onChangeText={(t) => setField("city", t)}
-                  placeholder="Barcelona"
+                  placeholder="Ahmedabad"
+                  placeholderTextColor="#C4B5FD"
+                  autoCapitalize="words"
+                />
+              </FormRow>
+              <Divider />
+              <FormRow label="State / Province">
+                <TextInput
+                  style={styles.formInput}
+                  value={draft.state ?? ""}
+                  onChangeText={(t) => setField("state", t)}
+                  placeholder="Gujarat"
                   placeholderTextColor="#C4B5FD"
                   autoCapitalize="words"
                 />
@@ -648,8 +662,16 @@ export default function ProfileScreen() {
             <View style={[styles.infoCard, { backgroundColor: isDark ? colors.backgroundSecondary : "#F9FAFB" }]}>
               <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>DETAILS</Text>
               <View style={styles.detailsList}>
-                {user?.age && <DetailRow icon="calendar-outline" value={`${user.age} years old`} colors={colors} />}
+                {user?.dob && <DetailRow icon="calendar-outline" value={`${user.dob}  ·  ${user.age} yrs`} colors={colors} />}
+                {!user?.dob && user?.age ? <DetailRow icon="calendar-outline" value={`${user.age} years old`} colors={colors} /> : null}
                 {user?.gender && <DetailRow icon="person-outline" value={user.gender} colors={colors} />}
+                {(user?.city || user?.state) && (
+                  <DetailRow
+                    icon="location-outline"
+                    value={[user.city, user.state, user.country].filter(Boolean).join(", ")}
+                    colors={colors}
+                  />
+                )}
                 {user?.occupation && <DetailRow icon="briefcase-outline" value={user.occupation} colors={colors} />}
                 {user?.education && <DetailRow icon="school-outline" value={user.education} colors={colors} />}
                 {user?.phone && <DetailRow icon="call-outline" value={user.phone} colors={colors} />}
