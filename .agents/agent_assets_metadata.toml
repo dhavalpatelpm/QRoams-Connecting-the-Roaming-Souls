@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "2N311eiIyJmy9up9k1duq"
+uri = "file://attached_assets/generated_images/qroams_icon.png"
+type = "image"
+title = "QRoams App Icon (Square 1:1)"
+
+[[outputs]]
+id = "pWFwz-eaEKercK3gSpO18"
+uri = "file://attached_assets/generated_images/qroams_logo_full.png"
+type = "image"
+title = "QRoams Full Logo with Tagline"
