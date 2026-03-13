@@ -5,10 +5,10 @@ generated = []
 id = "2N311eiIyJmy9up9k1duq"
 uri = "file://attached_assets/generated_images/qroams_icon.png"
 type = "image"
-title = "QRoams App Icon (Clean)"
+title = "QRoams App Icon — Dots & Heart"
 
 [[outputs]]
 id = "pWFwz-eaEKercK3gSpO18"
 uri = "file://attached_assets/generated_images/qroams_logo_full.png"
 type = "image"
-title = "QRoams Full Logo (Clean)"
+title = "QRoams Full Logo — Dots & Heart"
