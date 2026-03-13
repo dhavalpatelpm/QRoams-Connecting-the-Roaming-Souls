@@ -91,6 +91,21 @@ Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used b
 
 Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
 
+### `artifacts/qromes` (`@workspace/qromes`)
+
+iOS mobile app — **QRomes** ("Connecting the Roaming Souls"). Built with Expo React Native + expo-router.
+
+- **Entry**: `app/_layout.tsx` — root Stack navigator with AuthProvider, DiscoverProvider, ChatProvider
+- **Screens**: `app/index.tsx` (splash), `app/onboarding.tsx` (3-step), `app/call.tsx` (audio/video call modal)
+- **Tabs**: `app/(tabs)/` — Discover (swipeable profile cards), Explore (search/filter), Spark (coin economy + matching), Messages, Profile
+- **Chat**: `app/chat/[id].tsx` — inverted FlatList, quick replies, auto-reply mock
+- **Components**: `QRomesLogo.tsx` (SVG), `ProfileCard.tsx` (PanResponder 4-way swipe), `ProfileDetailModal.tsx`
+- **Context**: `AuthContext`, `DiscoverContext` (6 mock profiles), `ChatContext` (3 mock conversations)
+- **Theme**: `constants/colors.ts` (QColors — primary #7C3AED, accent #EC4899, dark bg #0A0A0F)
+- **Swipes**: Left=Audio Call, Right=Video Call, Up=Next Profile, Down=Open Chat, Tap=Full Profile
+- **Coins**: 100 starting coins, 15 per Spark, coin packs in Spark tab
+- No real backend — AsyncStorage for persistence, mock data throughout
+
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
