@@ -136,7 +136,7 @@ export default function QAIScreen() {
             <Text style={[styles.headerTitle, { color: colors.text }]}>Q-AI Coach</Text>
             <View style={styles.poweredBadge}>
               <Text style={[styles.poweredText, { color: colors.textTertiary }]}>
-                Powered by Claude
+                Powered by Groq
               </Text>
             </View>
           </View>

@@ -125,37 +125,51 @@ export default function DiscoverScreen() {
 
       {/* Location bar */}
       <TouchableOpacity
-        style={styles.locationBar}
+        style={[
+          styles.locationBar,
+          {
+            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : QColors.primaryLight,
+            borderColor: isDark ? "rgba(255,255,255,0.15)" : "#DDD6FE",
+          },
+        ]}
         onPress={() => router.push("/(tabs)/profile")}
         activeOpacity={0.75}
       >
-        <Ionicons name="location" size={13} color={QColors.primary} />
-        <Text style={styles.locationText} numberOfLines={1}>
+        <Ionicons name="location" size={13} color={isDark ? "#A78BFA" : QColors.primary} />
+        <Text style={[styles.locationText, { color: isDark ? "#A78BFA" : QColors.primary }]} numberOfLines={1}>
           {(user?.city || user?.country)
             ? [user.city, user.country].filter(Boolean).join(", ")
             : "Set your location"}
         </Text>
-        <Ionicons name="create-outline" size={12} color={QColors.primary} />
+        <Ionicons name="create-outline" size={12} color={isDark ? "#A78BFA" : QColors.primary} />
       </TouchableOpacity>
 
       {/* Swipe hint */}
       <View style={styles.hintRow}>
-        <View style={[styles.hint, { backgroundColor: QColors.primary + "20" }]}>
-          <Ionicons name="arrow-back" size={12} color={QColors.primary} />
-          <Text style={[styles.hintText, { color: QColors.primary }]}>Audio</Text>
-        </View>
-        <View style={[styles.hint, { backgroundColor: "#10B98120" }]}>
-          <Ionicons name="arrow-up" size={12} color="#10B981" />
-          <Text style={[styles.hintText, { color: "#10B981" }]}>Next</Text>
-        </View>
-        <View style={[styles.hint, { backgroundColor: QColors.accent + "20" }]}>
-          <Ionicons name="arrow-down" size={12} color={QColors.accent} />
-          <Text style={[styles.hintText, { color: QColors.accent }]}>Chat</Text>
-        </View>
-        <View style={[styles.hint, { backgroundColor: "#10B98120" }]}>
-          <Text style={[styles.hintText, { color: "#10B981" }]}>Video</Text>
-          <Ionicons name="arrow-forward" size={12} color="#10B981" />
-        </View>
+        {[
+          { icon: "arrow-back" as const, label: "Audio", color: QColors.primary },
+          { icon: "arrow-up" as const, label: "Next", color: "#10B981" },
+          { icon: "arrow-down" as const, label: "Chat", color: QColors.accent },
+          { icon: "arrow-forward" as const, label: "Video", color: "#10B981", iconRight: true },
+        ].map(({ icon, label, color, iconRight }) => (
+          <View
+            key={label}
+            style={[
+              styles.hint,
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.12)"
+                  : color + "18",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(255,255,255,0.08)" : color + "30",
+              },
+            ]}
+          >
+            {!iconRight && <Ionicons name={icon} size={11} color={isDark ? "#fff" : color} />}
+            <Text style={[styles.hintText, { color: isDark ? "#fff" : color }]}>{label}</Text>
+            {iconRight && <Ionicons name={icon} size={11} color={isDark ? "#fff" : color} />}
+          </View>
+        ))}
       </View>
 
       {/* Card Stack */}

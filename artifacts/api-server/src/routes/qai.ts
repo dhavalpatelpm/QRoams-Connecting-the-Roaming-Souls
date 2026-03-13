@@ -1,12 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { Router } from "express";
 
 const router = Router();
-
-const anthropic = new Anthropic({
-  apiKey: process.env["AI_INTEGRATIONS_ANTHROPIC_API_KEY"] || "dummy",
-  baseURL: process.env["AI_INTEGRATIONS_ANTHROPIC_BASE_URL"],
-});
 
 const SYSTEM_PROMPT = `You are Q-Coach, an AI assistant embedded in QRomes — a social connection app. Your role is to help users build confidence in:
 - Starting conversations with strangers
@@ -28,15 +22,37 @@ router.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "messages array is required" });
     }
 
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 512,
-      system: SYSTEM_PROMPT,
-      messages,
+    const apiKey = process.env["GROQ_API_KEY"];
+    if (!apiKey) {
+      return res.status(500).json({ error: "GROQ_API_KEY not configured" });
+    }
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 512,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages,
+        ],
+      }),
     });
 
-    const text =
-      response.content[0]?.type === "text" ? response.content[0].text : "";
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("Groq API error:", err);
+      return res.status(502).json({ error: "Q-AI unavailable" });
+    }
+
+    const data = (await response.json()) as {
+      choices: { message: { content: string } }[];
+    };
+    const text = data.choices?.[0]?.message?.content ?? "";
 
     return res.json({ content: text });
   } catch (err) {
