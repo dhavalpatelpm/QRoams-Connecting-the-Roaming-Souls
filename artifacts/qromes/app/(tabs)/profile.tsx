@@ -604,6 +604,28 @@ export default function ProfileScreen() {
         ) : (
           /* ─── View Mode ───────────────────────────────────────────────── */
           <View>
+            {/* Photos grid */}
+            {(user?.photos?.length ?? 0) > 1 && (
+              <View style={[styles.infoCard, { backgroundColor: isDark ? colors.backgroundSecondary : "#F9FAFB" }]}>
+                <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>PHOTOS</Text>
+                <View style={styles.viewPhotoGrid}>
+                  {user!.photos.map((uri, i) => (
+                    <View key={i} style={styles.viewPhotoSlot}>
+                      <Image source={{ uri }} style={styles.viewPhotoImg} />
+                      {i === 0 && (
+                        <View style={styles.viewPhotoMainBadge}>
+                          <Text style={styles.viewPhotoMainBadgeText}>Main</Text>
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                  <TouchableOpacity style={[styles.viewPhotoSlot, styles.viewPhotoAdd]} onPress={startEditing}>
+                    <Ionicons name="add" size={24} color={QColors.primary + "80"} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             {/* Bio */}
             {user?.bio ? (
               <View style={[styles.infoCard, { backgroundColor: isDark ? colors.backgroundSecondary : "#F9FAFB" }]}>
@@ -1222,5 +1244,45 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     marginTop: 20,
     marginBottom: 8,
+  },
+  viewPhotoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
+  },
+  viewPhotoSlot: {
+    width: "31%",
+    aspectRatio: 4 / 5,
+    borderRadius: 10,
+    overflow: "hidden",
+    position: "relative",
+  },
+  viewPhotoImg: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  viewPhotoMainBadge: {
+    position: "absolute",
+    bottom: 5,
+    left: 5,
+    backgroundColor: QColors.primary,
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  viewPhotoMainBadgeText: {
+    fontSize: 9,
+    color: "#fff",
+    fontFamily: "Inter_600SemiBold",
+  },
+  viewPhotoAdd: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

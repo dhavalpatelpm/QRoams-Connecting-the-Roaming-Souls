@@ -66,6 +66,7 @@ export default function MeetScreen() {
   const { isDark, colors } = useTheme();
   const { profiles } = useDiscover();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [proposedIds, setProposedIds] = useState<Set<string>>(new Set());
 
   const mutualConnections = profiles.slice(0, 5).map((p, i) => ({
     ...p,
@@ -75,7 +76,8 @@ export default function MeetScreen() {
     bgColors: AVATAR_COLORS[i % AVATAR_COLORS.length],
   }));
 
-  const handleProposeMeet = (name: string) => {
+  const handleProposeMeet = (id: string, name: string) => {
+    if (proposedIds.has(id)) return;
     Alert.alert(
       "Propose Meet 🤝",
       `Send ${name} a meet request${selectedCategory ? ` for a ${MEET_CATEGORIES.find((c) => c.id === selectedCategory)?.title}` : ""}?`,
@@ -83,8 +85,10 @@ export default function MeetScreen() {
         { text: "Cancel", style: "cancel" },
         {
           text: "Send Request",
-          onPress: () =>
-            Alert.alert("Sent! 🎉", `Your meet request was sent to ${name}.`),
+          onPress: () => {
+            setProposedIds((prev) => new Set([...prev, id]));
+            Alert.alert("Sent! 🎉", `Your meet request was sent to ${name}.`);
+          },
         },
       ]
     );
@@ -176,19 +180,26 @@ export default function MeetScreen() {
                 {person.distance} · {person.common} common
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.proposeBtn}
-              onPress={() => handleProposeMeet(person.firstName)}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={[QColors.primary, QColors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <Text style={styles.proposeBtnText}>Propose Meet</Text>
-            </TouchableOpacity>
+            {proposedIds.has(person.id) ? (
+              <View style={[styles.proposeBtn, { backgroundColor: "#E5E7EB" }]}>
+                <Ionicons name="checkmark-circle" size={15} color="#10B981" />
+                <Text style={[styles.proposeBtnText, { color: "#6B7280" }]}>Proposed</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.proposeBtn}
+                onPress={() => handleProposeMeet(person.id, person.firstName)}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={[QColors.primary, QColors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Text style={styles.proposeBtnText}>Propose Meet</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
 

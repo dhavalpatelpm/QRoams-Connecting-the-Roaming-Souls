@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -379,7 +381,52 @@ export default function OnboardingScreen() {
   const [personality, setPersonality] = useState("");
   const [relationship, setRelationship] = useState("");
 
-  // Step 2
+  // Step 2 — Photos
+  const [onboardPhotos, setOnboardPhotos] = useState<string[]>([]);
+
+  const pickOnboardPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [4, 5],
+      quality: 0.75,
+      base64: Platform.OS === "web",
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const uri = Platform.OS === "web" && asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setOnboardPhotos((prev) => [...prev, uri].slice(0, 6));
+    }
+  };
+
+  const takeOnboardPhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") return;
+    const result = await ImagePicker.launchCameraAsync({
+      cameraType: ImagePicker.CameraType.front,
+      allowsEditing: true,
+      aspect: [4, 5],
+      quality: 0.75,
+      base64: Platform.OS === "web",
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const uri = Platform.OS === "web" && asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setOnboardPhotos((prev) => [...prev, uri].slice(0, 6));
+    }
+  };
+
+  const removeOnboardPhoto = (idx: number) => {
+    setOnboardPhotos((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Step 3 — OTP
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -442,7 +489,7 @@ export default function OnboardingScreen() {
       bio: `${personality ? personality + " · " : ""}Based in ${city || "Unknown"}, ${selectedCountry.name}`,
       interests: selectedInterests,
       lookingFor: selectedLooking,
-      photos: [],
+      photos: onboardPhotos,
       coinBalance: 100,
       isOnline: true,
       occupation: "",
@@ -459,13 +506,14 @@ export default function OnboardingScreen() {
 
   const step0Valid = firstName.length > 0 && age.length > 0 && gender.length > 0;
   const step1Valid = selectedInterests.length >= 3 && selectedLooking.length >= 1;
-  const step2Valid = otp.join("").length === 6;
+  const step3Valid = otp.join("").length === 6;
 
   const topPad = Platform.OS === "web" ? 24 : insets.top;
 
   const STEPS = [
     { title: "Who are you?", subtitle: "Let's build your profile" },
     { title: "Your vibe", subtitle: "What makes you, you?" },
+    { title: "Your photos", subtitle: "Show your best self" },
     { title: "Verify", subtitle: "Quick confirmation" },
   ];
 
@@ -813,8 +861,101 @@ export default function OnboardingScreen() {
             </ScrollView>
           )}
 
-          {/* ─── STEP 2 ─────────────────────────────────────────────────── */}
+          {/* ─── STEP 2 — Photos ─────────────────────────────────────── */}
           {step === 2 && (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.stepContent}
+            >
+              <View style={styles.photoStepIntro}>
+                <LinearGradient
+                  colors={[QColors.primary, QColors.accent]}
+                  style={styles.photoStepIconBg}
+                >
+                  <Ionicons name="images" size={28} color="#fff" />
+                </LinearGradient>
+                <Text style={styles.photoStepTitle}>Add your best photos</Text>
+                <Text style={styles.photoStepSub}>
+                  Profiles with photos get 3× more connections. Add up to 6 photos.
+                </Text>
+              </View>
+
+              {/* Photo grid — 3 columns */}
+              <View style={styles.photoGrid}>
+                {Array.from({ length: 6 }).map((_, i) => {
+                  const uri = onboardPhotos[i];
+                  return uri ? (
+                    <View key={i} style={styles.photoSlot}>
+                      <Image source={{ uri }} style={styles.photoSlotImg} />
+                      <TouchableOpacity
+                        style={styles.photoSlotRemove}
+                        onPress={() => removeOnboardPhoto(i)}
+                      >
+                        <Ionicons name="close-circle" size={22} color="#fff" />
+                      </TouchableOpacity>
+                      {i === 0 && (
+                        <View style={styles.photoMainBadge}>
+                          <Text style={styles.photoMainBadgeText}>Main</Text>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      key={i}
+                      style={[styles.photoSlot, styles.photoSlotEmpty]}
+                      onPress={onboardPhotos.length < 6 ? pickOnboardPhoto : undefined}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="add" size={28} color={QColors.primary + "80"} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Pick buttons */}
+              <View style={styles.photoPickRow}>
+                <TouchableOpacity
+                  style={[styles.photoPickBtn, { borderColor: QColors.primary }]}
+                  onPress={pickOnboardPhoto}
+                >
+                  <Ionicons name="image-outline" size={18} color={QColors.primary} />
+                  <Text style={[styles.photoPickBtnText, { color: QColors.primary }]}>Gallery</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.photoPickBtn, { borderColor: QColors.accent }]}
+                  onPress={takeOnboardPhoto}
+                >
+                  <Ionicons name="camera-outline" size={18} color={QColors.accent} />
+                  <Text style={[styles.photoPickBtnText, { color: QColors.accent }]}>Camera</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.btnRow}>
+                <TouchableOpacity style={styles.backBtn} onPress={() => animateToStep(1)}>
+                  <Ionicons name="arrow-back" size={18} color={QColors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.primaryBtn, { flex: 1 }]}
+                  onPress={() => animateToStep(3)}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={[QColors.primary, QColors.accent]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+                  />
+                  <Text style={styles.primaryBtnText}>
+                    {onboardPhotos.length === 0 ? "Skip for now" : "Continue"}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          )}
+
+          {/* ─── STEP 3 ─────────────────────────────────────────────────── */}
+          {step === 3 && (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.stepContent}
@@ -918,7 +1059,7 @@ export default function OnboardingScreen() {
                   <View style={styles.btnRow}>
                     <TouchableOpacity
                       style={styles.backBtn}
-                      onPress={() => animateToStep(1)}
+                      onPress={() => animateToStep(2)}
                     >
                       <Ionicons name="arrow-back" size={18} color={QColors.primary} />
                     </TouchableOpacity>
@@ -926,10 +1067,10 @@ export default function OnboardingScreen() {
                       style={[
                         styles.primaryBtn,
                         { flex: 1 },
-                        !step2Valid && styles.primaryBtnDisabled,
+                        !step3Valid && styles.primaryBtnDisabled,
                       ]}
-                      onPress={() => step2Valid && handleFinish()}
-                      activeOpacity={step2Valid ? 0.85 : 1}
+                      onPress={() => step3Valid && handleFinish()}
+                      activeOpacity={step3Valid ? 0.85 : 1}
                     >
                       <LinearGradient
                         colors={[QColors.primary, QColors.accent]}
@@ -1382,6 +1523,96 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontFamily: "Inter_400Regular",
     marginTop: 10,
+  },
+  photoStepIntro: {
+    alignItems: "center",
+    marginBottom: 24,
+    gap: 10,
+  },
+  photoStepIconBg: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoStepTitle: {
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    color: "#111827",
+    textAlign: "center",
+  },
+  photoStepSub: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  photoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 20,
+  },
+  photoSlot: {
+    width: "31%",
+    aspectRatio: 4 / 5,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  photoSlotEmpty: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoSlotImg: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  photoSlotRemove: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+  },
+  photoMainBadge: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    backgroundColor: QColors.primary,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  photoMainBadgeText: {
+    fontSize: 10,
+    color: "#fff",
+    fontFamily: "Inter_600SemiBold",
+  },
+  photoPickRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
+  photoPickBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    backgroundColor: "#fff",
+  },
+  photoPickBtnText: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
   },
   resendText: {
     textAlign: "center",
