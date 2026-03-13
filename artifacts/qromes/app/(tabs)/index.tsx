@@ -18,6 +18,7 @@ import { ProfileDetailModal } from "@/components/ProfileDetailModal";
 import { QRomesLogo } from "@/components/QRomesLogo";
 import { useDiscover, ProfileCard as ProfileCardType } from "@/context/DiscoverContext";
 import { useChat } from "@/context/ChatContext";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/constants/theme";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
@@ -27,6 +28,7 @@ export default function DiscoverScreen() {
   const { isDark, colors } = useTheme();
   const { profiles, currentIndex, swipeLeft, swipeRight, nextProfile, resetFeed } = useDiscover();
   const { createOrGetConversation } = useChat();
+  const { user } = useAuth();
   const [selectedProfile, setSelectedProfile] = useState<ProfileCardType | null>(null);
 
   const currentProfile = profiles[currentIndex];
@@ -75,14 +77,8 @@ export default function DiscoverScreen() {
         <QRomesLogo size={32} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>QRomes</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={[styles.headerBtn, { backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6" }]}
-          >
-            <Ionicons name="options-outline" size={20} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.coinBadge]}
-          >
+          {/* Coin balance */}
+          <TouchableOpacity style={styles.coinBadge}>
             <LinearGradient
               colors={[QColors.gold, "#F97316"]}
               start={{ x: 0, y: 0 }}
@@ -90,7 +86,28 @@ export default function DiscoverScreen() {
               style={StyleSheet.absoluteFill}
             />
             <Ionicons name="flash" size={13} color="#fff" />
-            <Text style={styles.coinText}>100</Text>
+            <Text style={styles.coinText}>{user?.coinBalance ?? 100}</Text>
+          </TouchableOpacity>
+
+          {/* Profile avatar → navigates to Profile tab */}
+          <TouchableOpacity
+            style={styles.profileAvatar}
+            onPress={() => router.push("/(tabs)/profile")}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[QColors.primary, QColors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {user?.firstName ? (
+              <Text style={styles.profileAvatarInitial}>
+                {user.firstName[0].toUpperCase()}
+              </Text>
+            ) : (
+              <Ionicons name="person" size={16} color="#fff" />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -249,12 +266,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  headerBtn: {
+  profileAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  profileAvatarInitial: {
+    color: "#fff",
+    fontSize: 15,
+    fontFamily: "Inter_700Bold",
   },
   coinBadge: {
     flexDirection: "row",
