@@ -6,6 +6,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,13 +19,22 @@ import { useTheme } from "@/constants/theme";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
-type Message = { id: string; role: "user" | "assistant"; content: string };
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  isError?: boolean;
+};
 
-const QUICK_PROMPTS = [
+const SUGGESTIONS = [
   "How to start a conversation?",
   "Tips for first impression",
   "What to wear on a date?",
   "How to be confident?",
+  "Conversation topics for dates",
+  "How to ask someone out?",
+  "Reading body language",
+  "Overcoming shyness",
 ];
 
 const WELCOME_MSG: Message = {
@@ -61,7 +71,7 @@ export default function QAIScreen() {
 
     try {
       const apiMessages = updatedMessages
-        .filter((m) => m.id !== "welcome")
+        .filter((m) => m.id !== "welcome" && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
       const res = await fetch(`${API_BASE}/qai/chat`, {
@@ -70,27 +80,45 @@ export default function QAIScreen() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
+      const text = data.content || "";
+
+      if (!text) throw new Error("Empty response");
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.content || "I'm having trouble connecting. Please try again.",
+        content: text,
       };
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "I couldn't connect right now. Please check your connection and try again.",
-        },
-      ]);
+    } catch (err) {
+      const errMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "I had trouble connecting. Tap **Retry** to try again.",
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 150);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
     }
   };
+
+  const retryLast = () => {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUser) return;
+    setMessages((prev) => prev.filter((m) => !m.isError));
+    sendMessage(lastUser.content);
+  };
+
+  const lastMessage = messages[messages.length - 1];
+  const showSuggestions =
+    !loading && lastMessage?.role === "assistant" && !lastMessage.isError;
 
   const renderItem = ({ item }: { item: Message }) => {
     const isUser = item.role === "user";
@@ -110,18 +138,45 @@ export default function QAIScreen() {
             styles.bubble,
             isUser
               ? styles.bubbleUser
-              : [styles.bubbleBot, { backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6" }],
+              : [
+                  styles.bubbleBot,
+                  {
+                    backgroundColor: item.isError
+                      ? (isDark ? "#3B1A1A" : "#FEE2E2")
+                      : (isDark ? colors.backgroundSecondary : "#F3F4F6"),
+                  },
+                ],
           ]}
         >
-          <Text style={[styles.bubbleText, { color: isUser ? "#fff" : colors.text }]}>
-            {item.content}
-          </Text>
+          {item.isError ? (
+            <View style={{ gap: 8 }}>
+              <Text style={[styles.bubbleText, { color: isDark ? "#FCA5A5" : "#DC2626" }]}>
+                ⚠️ Couldn't reach Q-Coach right now.
+              </Text>
+              <TouchableOpacity
+                style={styles.retryBtn}
+                onPress={retryLast}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[QColors.primary, QColors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Ionicons name="refresh" size={13} color="#fff" />
+                <Text style={styles.retryText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Text style={[styles.bubbleText, { color: isUser ? "#fff" : colors.text }]}>
+              {item.content}
+            </Text>
+          )}
         </View>
       </View>
     );
   };
-
-  const showQuickPrompts = messages.length === 1;
 
   return (
     <KeyboardAvoidingView
@@ -130,11 +185,24 @@ export default function QAIScreen() {
       keyboardVerticalOffset={0}
     >
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top + 8, backgroundColor: colors.background },
+        ]}
+      >
         <View style={{ flex: 1 }}>
           <View style={styles.headerRow}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Q-AI Coach</Text>
-            <View style={styles.poweredBadge}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Q-AI Coach
+            </Text>
+            <View
+              style={[
+                styles.poweredBadge,
+                { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" },
+              ]}
+            >
+              <View style={styles.groqDot} />
               <Text style={[styles.poweredText, { color: colors.textTertiary }]}>
                 Powered by Groq
               </Text>
@@ -153,54 +221,38 @@ export default function QAIScreen() {
         keyExtractor={(m) => m.id}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.list,
-          { paddingBottom: 16 },
-        ]}
+        contentContainerStyle={[styles.list, { paddingBottom: 8 }]}
+        onContentSizeChange={() =>
+          listRef.current?.scrollToEnd({ animated: false })
+        }
         ListHeaderComponent={
-          <>
-            {/* Bot Intro */}
-            <View style={styles.introSection}>
-              <View style={styles.botIconLarge}>
-                <LinearGradient
-                  colors={[QColors.primary, QColors.accent]}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Text style={styles.botIconEmoji}>🤖</Text>
-              </View>
-              <Text style={[styles.introTitle, { color: colors.text }]}>
-                Hey! I'm your Q-Coach 👋
-              </Text>
-              <Text style={[styles.introSub, { color: colors.textSecondary }]}>
-                Ask me anything about conversations, first impressions, date planning, or dressing well!
-              </Text>
+          <View style={styles.introSection}>
+            <View style={styles.botIconLarge}>
+              <LinearGradient
+                colors={[QColors.primary, QColors.accent]}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={styles.botIconEmoji}>🤖</Text>
             </View>
-
-            {/* Quick Prompts — show only at start */}
-            {showQuickPrompts && (
-              <View style={styles.promptsGrid}>
-                {QUICK_PROMPTS.map((p) => (
-                  <TouchableOpacity
-                    key={p}
-                    style={[
-                      styles.promptChip,
-                      { backgroundColor: isDark ? colors.backgroundSecondary : QColors.primaryLight },
-                    ]}
-                    onPress={() => sendMessage(p)}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.promptChipText, { color: QColors.primary }]}>{p}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </>
+            <Text style={[styles.introTitle, { color: colors.text }]}>
+              Hey! I'm your Q-Coach 👋
+            </Text>
+            <Text style={[styles.introSub, { color: colors.textSecondary }]}>
+              Ask me anything about conversations, first impressions, date
+              planning, or dressing well!
+            </Text>
+          </View>
         }
       />
 
       {/* Typing indicator */}
       {loading && (
-        <View style={[styles.typingRow, { backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.typingRow,
+            { backgroundColor: colors.background },
+          ]}
+        >
           <View style={styles.botAvatar}>
             <LinearGradient
               colors={[QColors.primary, QColors.accent]}
@@ -208,9 +260,66 @@ export default function QAIScreen() {
             />
             <Text style={styles.botAvatarText}>Q</Text>
           </View>
-          <View style={[styles.bubble, styles.bubbleBot, { backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6" }]}>
-            <ActivityIndicator size="small" color={QColors.primary} />
+          <View
+            style={[
+              styles.bubble,
+              styles.bubbleBot,
+              {
+                backgroundColor: isDark
+                  ? colors.backgroundSecondary
+                  : "#F3F4F6",
+              },
+            ]}
+          >
+            <View style={styles.dotsRow}>
+              <ActivityIndicator size="small" color={QColors.primary} />
+              <Text style={[styles.typingText, { color: colors.textSecondary }]}>
+                Q-Coach is thinking...
+              </Text>
+            </View>
           </View>
+        </View>
+      )}
+
+      {/* Suggestions — shown after every AI answer */}
+      {showSuggestions && (
+        <View
+          style={[
+            styles.suggestionsWrap,
+            { borderTopColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.suggestionsLabel, { color: colors.textTertiary }]}>
+            Suggested questions
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.suggestionsScroll}
+          >
+            {SUGGESTIONS.map((s) => (
+              <TouchableOpacity
+                key={s}
+                style={[
+                  styles.suggestionChip,
+                  {
+                    backgroundColor: isDark
+                      ? colors.backgroundSecondary
+                      : QColors.primaryLight,
+                    borderColor: isDark
+                      ? "rgba(124,58,237,0.3)"
+                      : "#DDD6FE",
+                  },
+                ]}
+                onPress={() => sendMessage(s)}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.suggestionChipText, { color: QColors.primary }]}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
 
@@ -225,10 +334,14 @@ export default function QAIScreen() {
           },
         ]}
       >
-        <View style={[
-          styles.inputWrap,
-          { backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6" }
-        ]}>
+        <View
+          style={[
+            styles.inputWrap,
+            {
+              backgroundColor: isDark ? colors.backgroundSecondary : "#F3F4F6",
+            },
+          ]}
+        >
           <TextInput
             style={[styles.input, { color: colors.text }]}
             placeholder="Ask your Q-Coach..."
@@ -242,7 +355,10 @@ export default function QAIScreen() {
           />
         </View>
         <TouchableOpacity
-          style={[styles.sendBtn, (!input.trim() || loading) && { opacity: 0.5 }]}
+          style={[
+            styles.sendBtn,
+            (!input.trim() || loading) && { opacity: 0.5 },
+          ]}
           onPress={() => sendMessage(input)}
           disabled={!input.trim() || loading}
           activeOpacity={0.8}
@@ -275,10 +391,18 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   poweredBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: "rgba(0,0,0,0.06)",
     borderRadius: 20,
+  },
+  groqDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#10B981",
   },
   poweredText: {
     fontSize: 11,
@@ -323,23 +447,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
   },
-  promptsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
-  },
-  promptChip: {
-    width: "48%",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  promptChipText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    lineHeight: 18,
-  },
   msgRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -381,12 +488,63 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     lineHeight: 21,
   },
+  retryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  retryText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+  },
   typingRow: {
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 8,
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingBottom: 6,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  typingText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+  },
+  suggestionsWrap: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 10,
+    paddingBottom: 6,
+    gap: 8,
+  },
+  suggestionsLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    paddingHorizontal: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  suggestionsScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  suggestionChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  suggestionChipText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
   },
   inputBar: {
     flexDirection: "row",
