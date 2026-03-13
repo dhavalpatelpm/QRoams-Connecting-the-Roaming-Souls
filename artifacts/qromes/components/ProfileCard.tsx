@@ -229,27 +229,39 @@ export function ProfileCard({
           style={styles.infoGradient}
         >
           <View style={styles.infoContent}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name}>
-                {profile.firstName}, {profile.age}
-              </Text>
-              <MaterialCommunityIcons
-                name="shield-check"
-                size={18}
-                color={QColors.primary}
-              />
+            {/* ── Two-column top row ─────────────────────────────────────── */}
+            <View style={styles.infoTopRow}>
+              {/* Left: name + verified badge */}
+              <View style={styles.infoLeft}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {profile.firstName}, {profile.age}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="shield-check"
+                    size={16}
+                    color={QColors.primary}
+                  />
+                </View>
+              </View>
+
+              {/* Right: location + profession */}
+              <View style={styles.infoRight}>
+                <View style={styles.locationRow}>
+                  <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.location} numberOfLines={1}>
+                    {[profile.city, profile.country].filter(Boolean).join(", ")}
+                  </Text>
+                </View>
+                {profile.occupation ? (
+                  <Text style={styles.occupation} numberOfLines={1}>
+                    {profile.occupation}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.location}>
-                {profile.city}, {profile.country}
-              </Text>
-            </View>
-            {profile.occupation && (
-              <Text style={styles.occupation} numberOfLines={1}>
-                {profile.occupation}
-              </Text>
-            )}
+
+            {/* Bio */}
             <Text style={styles.bio} numberOfLines={2}>
               {profile.bio}
             </Text>
@@ -397,7 +409,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   infoContent: {
-    gap: 4,
+    gap: 6,
+  },
+  infoTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  infoLeft: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  infoRight: {
+    alignItems: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.32)",
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    maxWidth: "52%",
   },
   nameRow: {
     flexDirection: "row",
@@ -405,9 +435,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   name: {
-    fontSize: 26,
+    fontSize: 24,
     fontFamily: "Inter_700Bold",
     color: "#fff",
+    flexShrink: 1,
   },
   locationRow: {
     flexDirection: "row",
@@ -415,14 +446,17 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   location: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.8)",
-    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "rgba(255,255,255,0.9)",
+    fontFamily: "Inter_500Medium",
+    flexShrink: 1,
   },
   occupation: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.65)",
+    color: "rgba(255,255,255,0.75)",
     fontFamily: "Inter_400Regular",
+    marginTop: 2,
+    textAlign: "right",
   },
   bio: {
     fontSize: 13,
