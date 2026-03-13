@@ -93,13 +93,13 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 
 ### `artifacts/qromes` (`@workspace/qromes`)
 
-iOS mobile app — **QRomes** ("Connecting the Roaming Souls"). Built with Expo React Native + expo-router.
+iOS mobile app — **QRoams** ("Connecting the Roaming Souls"). Built with Expo React Native + expo-router.
 
 - **Entry**: `app/_layout.tsx` — root Stack navigator with AuthProvider, DiscoverProvider, ChatProvider
 - **Screens**: `app/index.tsx` (splash), `app/onboarding.tsx` (3-step), `app/call.tsx` (audio/video call modal)
 - **Tabs**: `app/(tabs)/` — Discover (swipeable profile cards), Explore (search/filter), Spark (coin economy + matching), Messages, Profile
 - **Chat**: `app/chat/[id].tsx` — inverted FlatList, quick replies, auto-reply mock
-- **Components**: `QRomesLogo.tsx` (SVG), `ProfileCard.tsx` (PanResponder 4-way swipe), `ProfileDetailModal.tsx`
+- **Components**: `QRoamsLogo.tsx` (SVG), `ProfileCard.tsx` (PanResponder 4-way swipe), `ProfileDetailModal.tsx`
 - **Context**: `AuthContext`, `DiscoverContext` (6 mock profiles), `ChatContext` (3 mock conversations)
 - **Theme**: `constants/colors.ts` (QColors — primary #7C3AED, accent #EC4899, dark bg #0A0A0F)
 - **Swipes**: Left=Audio Call, Right=Video Call, Up=Next Profile, Down=Open Chat, Tap=Full Profile
