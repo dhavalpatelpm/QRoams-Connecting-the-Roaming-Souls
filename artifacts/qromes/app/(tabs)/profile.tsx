@@ -763,7 +763,7 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={[styles.version, { color: colors.textTertiary }]}>
-              QRomes v1.0.0 · Connecting the Roaming Souls
+              QRoams v1.0.0 · Connecting the Roaming Souls
             </Text>
           </View>
         )}

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { QColors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
-import { QRomesLogo } from "@/components/QRomesLogo";
+import { QRoamsLogo } from "@/components/QRoamsLogo";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
@@ -78,8 +78,8 @@ export default function SplashPage() {
           alignItems: "center",
         }}
       >
-        <QRomesLogo size={100} />
-        <Text style={styles.appName}>QRomes</Text>
+        <QRoamsLogo size={100} />
+        <Text style={styles.appName}>QRoams</Text>
         <Text style={styles.tagline}>CONNECTING THE ROAMING SOULS</Text>
       </Animated.View>
 

@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QColors } from "@/constants/colors";
 import { ProfileCard } from "@/components/ProfileCard";
 import { ProfileDetailModal } from "@/components/ProfileDetailModal";
-import { QRomesLogo } from "@/components/QRomesLogo";
+import { QRoamsLogo } from "@/components/QRoamsLogo";
 import { useDiscover, ProfileCard as ProfileCardType } from "@/context/DiscoverContext";
 import { useChat } from "@/context/ChatContext";
 import { useAuth } from "@/context/AuthContext";
@@ -120,8 +120,8 @@ export default function DiscoverScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
         <View style={styles.headerLeft}>
-          <QRomesLogo size={42} />
-          <Text style={[styles.headerTitle, { color: colors.text }]}>QRomes</Text>
+          <QRoamsLogo size={42} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>QRoams</Text>
         </View>
 
         <View style={styles.headerRight}>

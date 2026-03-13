@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/"
-title = "QRomes"
+title = "QRoams"
 version = "1.0.0"
 id = "artifacts/qromes"
 router = "expo-domain"

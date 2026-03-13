@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QColors } from "@/constants/colors";
-import { QRomesLogo } from "@/components/QRomesLogo";
+import { QRoamsLogo } from "@/components/QRoamsLogo";
 import { useAuth } from "@/context/AuthContext";
 
 // ─── Country Data ────────────────────────────────────────────────────────────
@@ -546,8 +546,8 @@ export default function OnboardingScreen() {
         style={[styles.header, { paddingTop: topPad + 16 }]}
       >
         <View style={styles.headerTop}>
-          <QRomesLogo size={36} />
-          <Text style={styles.appName}>QRomes</Text>
+          <QRoamsLogo size={36} />
+          <Text style={styles.appName}>QRoams</Text>
         </View>
 
         {/* Step progress */}
@@ -1162,7 +1162,7 @@ export default function OnboardingScreen() {
                         style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
                       />
                       <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                      <Text style={styles.primaryBtnText}>Enter QRomes</Text>
+                      <Text style={styles.primaryBtnText}>Enter QRoams</Text>
                     </TouchableOpacity>
                   </View>
 

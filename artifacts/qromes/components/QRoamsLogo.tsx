@@ -17,7 +17,7 @@ type Props = {
   variant?: "full" | "icon";
 };
 
-export function QRomesLogo({
+export function QRoamsLogo({
   size = 64,
   showText = false,
   textColor = "#fff",
@@ -93,7 +93,7 @@ export function QRomesLogo({
 
       {showText && (
         <View style={styles.textContainer}>
-          <Text style={[styles.appName, { color: textColor }]}>QRomes</Text>
+          <Text style={[styles.appName, { color: textColor }]}>QRoams</Text>
           <Text style={[styles.tagline, { color: textColor }]}>
             CONNECTING THE ROAMING SOULS
           </Text>
