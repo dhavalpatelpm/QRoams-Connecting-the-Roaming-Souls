@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -69,16 +70,35 @@ export default function DiscoverScreen() {
 
   const isEmpty = currentIndex >= profiles.length;
 
-  const topPadding = insets.top;
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
-        <QRomesLogo size={32} />
-        <Text style={[styles.headerTitle, { color: colors.text }]}>QRomes</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
+        <View style={styles.headerLeft}>
+          <QRomesLogo size={28} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>QRomes</Text>
+        </View>
+
         <View style={styles.headerRight}>
-          {/* Coin balance */}
+          <TouchableOpacity
+            style={styles.locationPill}
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <Ionicons
+              name="location"
+              size={11}
+              color={isDark ? "#A78BFA" : QColors.primary}
+            />
+            <Text
+              style={[styles.locationPillText, { color: isDark ? "#A78BFA" : QColors.primary }]}
+              numberOfLines={1}
+            >
+              {(user?.city || user?.country)
+                ? [user.city, user.country].filter(Boolean).join(", ")
+                : "Set location"}
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.coinBadge}>
             <LinearGradient
               colors={[QColors.gold, "#F97316"]}
@@ -86,11 +106,10 @@ export default function DiscoverScreen() {
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
             />
-            <Ionicons name="flash" size={13} color="#fff" />
+            <Ionicons name="flash" size={12} color="#fff" />
             <Text style={styles.coinText}>{user?.coinBalance ?? 100}</Text>
           </TouchableOpacity>
 
-          {/* Profile avatar → navigates to Profile tab */}
           <TouchableOpacity
             style={styles.profileAvatar}
             onPress={() => router.push("/(tabs)/profile")}
@@ -115,7 +134,7 @@ export default function DiscoverScreen() {
                     {user.firstName[0].toUpperCase()}
                   </Text>
                 ) : (
-                  <Ionicons name="person" size={16} color="#fff" />
+                  <Ionicons name="person" size={14} color="#fff" />
                 )}
               </>
             )}
@@ -123,56 +142,7 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {/* Location bar */}
-      <TouchableOpacity
-        style={[
-          styles.locationBar,
-          {
-            backgroundColor: isDark ? "rgba(255,255,255,0.1)" : QColors.primaryLight,
-            borderColor: isDark ? "rgba(255,255,255,0.15)" : "#DDD6FE",
-          },
-        ]}
-        onPress={() => router.push("/(tabs)/profile")}
-        activeOpacity={0.75}
-      >
-        <Ionicons name="location" size={13} color={isDark ? "#A78BFA" : QColors.primary} />
-        <Text style={[styles.locationText, { color: isDark ? "#A78BFA" : QColors.primary }]} numberOfLines={1}>
-          {(user?.city || user?.country)
-            ? [user.city, user.country].filter(Boolean).join(", ")
-            : "Set your location"}
-        </Text>
-        <Ionicons name="create-outline" size={12} color={isDark ? "#A78BFA" : QColors.primary} />
-      </TouchableOpacity>
-
-      {/* Swipe hint */}
-      <View style={styles.hintRow}>
-        {[
-          { icon: "arrow-back" as const, label: "Audio", color: QColors.primary },
-          { icon: "arrow-up" as const, label: "Next", color: "#10B981" },
-          { icon: "arrow-down" as const, label: "Chat", color: QColors.accent },
-          { icon: "arrow-forward" as const, label: "Video", color: "#10B981", iconRight: true },
-        ].map(({ icon, label, color, iconRight }) => (
-          <View
-            key={label}
-            style={[
-              styles.hint,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.12)"
-                  : color + "18",
-                borderWidth: 1,
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : color + "30",
-              },
-            ]}
-          >
-            {!iconRight && <Ionicons name={icon} size={11} color={isDark ? "#fff" : color} />}
-            <Text style={[styles.hintText, { color: isDark ? "#fff" : color }]}>{label}</Text>
-            {iconRight && <Ionicons name={icon} size={11} color={isDark ? "#fff" : color} />}
-          </View>
-        ))}
-      </View>
-
-      {/* Card Stack */}
+      {/* Card Stack — fills all remaining space */}
       <View style={styles.cardStack}>
         {isEmpty ? (
           <View style={styles.emptyState}>
@@ -227,47 +197,56 @@ export default function DiscoverScreen() {
         )}
       </View>
 
-      {/* Action buttons */}
+      {/* Tinder-style Action Buttons */}
       {!isEmpty && (
         <View style={[styles.actions, { paddingBottom: insets.bottom + 62 }]}>
+          {/* Undo */}
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: QColors.primary + "15" }]}
-            onPress={() => handleAudioCall(currentProfile)}
-          >
-            <Ionicons name="call" size={22} color={QColors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: "#F3F4F6" }]}
+            style={[styles.actionRing, { borderColor: QColors.gold }]}
             onPress={() => nextProfile()}
           >
-            <Ionicons name="refresh" size={22} color="#9CA3AF" />
+            <Ionicons name="arrow-undo" size={22} color={QColors.gold} />
           </TouchableOpacity>
+
+          {/* Pass / Audio call (swipe left = audio) */}
           <TouchableOpacity
-            style={styles.sparkBtn}
-            onPress={() => handleVideoCall(currentProfile)}
+            style={[styles.actionRingLg, { borderColor: "#EF4444" }]}
+            onPress={() => handleAudioCall(currentProfile)}
           >
-            <LinearGradient
-              colors={[QColors.primary, QColors.accent]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Ionicons name="videocam" size={26} color="#fff" />
+            <Ionicons name="close" size={32} color="#EF4444" />
           </TouchableOpacity>
+
+          {/* Star / Super like */}
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: QColors.accent + "15" }]}
-            onPress={() => handleChat(currentProfile)}
-          >
-            <Ionicons name="chatbubble" size={22} color={QColors.accent} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: QColors.gold + "15" }]}
+            style={[styles.actionRing, { borderColor: "#3B82F6" }]}
             onPress={() => {
               if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               nextProfile();
             }}
           >
-            <Ionicons name="star" size={22} color={QColors.gold} />
+            <Ionicons name="star" size={22} color="#3B82F6" />
+          </TouchableOpacity>
+
+          {/* Heart / Video call (swipe right = video) */}
+          <TouchableOpacity
+            style={[styles.actionRingLg, { borderColor: "#10B981" }]}
+            onPress={() => handleVideoCall(currentProfile)}
+          >
+            <Ionicons name="heart" size={30} color="#10B981" />
+          </TouchableOpacity>
+
+          {/* Boost / Chat */}
+          <TouchableOpacity
+            style={styles.boostBtn}
+            onPress={() => handleChat(currentProfile)}
+          >
+            <LinearGradient
+              colors={[QColors.primary, QColors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       )}
@@ -292,86 +271,62 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    gap: 8,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: "Inter_700Bold",
-    flex: 1,
+    letterSpacing: -0.3,
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  profileAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  profileAvatarInitial: {
-    color: "#fff",
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-  },
-  coinBadge: {
+  locationPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    overflow: "hidden",
     gap: 4,
+    maxWidth: 110,
   },
-  coinText: {
-    color: "#fff",
-    fontSize: 13,
-    fontFamily: "Inter_700Bold",
-  },
-  locationBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    marginHorizontal: 20,
-    marginBottom: 10,
-    gap: 5,
-    backgroundColor: QColors.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#DDD6FE",
-    maxWidth: "80%",
-  },
-  locationText: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-    color: QColors.primary,
+  locationPillText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
     flexShrink: 1,
   },
-  hintRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  hint: {
+  coinBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: 12,
+    overflow: "hidden",
   },
-  hintText: {
-    fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
+  coinText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+  },
+  profileAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileAvatarInitial: {
+    color: "#fff",
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
   },
   cardStack: {
     flex: 1,
@@ -382,23 +337,45 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
+    gap: 14,
+    paddingTop: 8,
     paddingHorizontal: 20,
   },
-  actionBtn: {
+  actionRing: {
     width: 52,
     height: 52,
     borderRadius: 26,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "transparent",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  sparkBtn: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+  actionRingLg: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "transparent",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  boostBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: QColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
