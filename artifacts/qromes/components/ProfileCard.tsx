@@ -18,7 +18,7 @@ import { useTheme } from "@/constants/theme";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 32;
-const CARD_H = SCREEN_H * 0.60;
+const CARD_H = SCREEN_H * 0.52;
 const SWIPE_THRESHOLD = 80;
 
 type Props = {

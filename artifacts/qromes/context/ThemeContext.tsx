@@ -28,14 +28,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const setMode = async (newMode: ThemeMode) => {
+  const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
-    await AsyncStorage.setItem(STORAGE_KEY, newMode);
+    AsyncStorage.setItem(STORAGE_KEY, newMode).catch(console.error);
   };
 
   const toggle = () => {
-    const next = isDark ? "light" : "dark";
-    setMode(next);
+    setModeState((current) => {
+      const currentIsDark =
+        current === "system" ? systemScheme === "dark" : current === "dark";
+      const next: ThemeMode = currentIsDark ? "light" : "dark";
+      AsyncStorage.setItem(STORAGE_KEY, next).catch(console.error);
+      return next;
+    });
   };
 
   const isDark =

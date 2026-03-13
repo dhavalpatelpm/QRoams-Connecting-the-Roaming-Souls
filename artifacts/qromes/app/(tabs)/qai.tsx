@@ -330,7 +330,7 @@ export default function QAIScreen() {
           {
             backgroundColor: colors.background,
             borderTopColor: colors.border,
-            paddingBottom: insets.bottom + 8,
+            paddingBottom: insets.bottom + 64,
           },
         ]}
       >
